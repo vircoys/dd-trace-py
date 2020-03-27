@@ -101,7 +101,9 @@ class PatchTestCase(object):
     """
     @run_in_subprocess
     class Base(SubprocessTestCase, PatchMixin):
-        """Provides default test methods to be used for testing common integration patching logic.
+        """PatchTestCase provides default test methods to be used for testing
+        common integration patching logic.
+
         Each test method provides a default implementation which will use the
         provided attributes (described below). If the attributes are not
         provided a NotImplementedError will be raised for each method that is
@@ -114,6 +116,7 @@ class PatchTestCase(object):
             __unpatch_func__ unpatch function from the integration.
 
         Example:
+
         A simple implementation inheriting this TestCase looks like::
 
             from ddtrace.contrib.redis import patch, unpatch
@@ -191,7 +194,7 @@ class PatchTestCase(object):
             tests += self._gen_test_attrs(['import', 'patch', 'unpatch'])
             tests += self._gen_test_attrs(['import', 'patch', 'unpatch', 'unpatch'])
 
-            # TODO: it may be possible to generate test cases dynamically. For
+            # DEV: it may be possible to generate test cases dynamically. For
             # now focus on the important ones.
             test_ignore = set([
                 'test_unpatch_import_patch',
@@ -224,12 +227,12 @@ class PatchTestCase(object):
 
             So an appropriate assert_module_patched would look like::
 
-                def assert_module_patched(self, redis):
-                    self.assert_wrapped(redis.StrictRedis.execute_command)
-                    self.assert_wrapped(redis.StrictRedis.pipeline)
-                    self.assert_wrapped(redis.Redis.pipeline)
-                    self.assert_wrapped(redis.client.BasePipeline.execute)
-                    self.assert_wrapped(redis.client.BasePipeline.immediate_execute_command)
+            def assert_module_patched(self, redis):
+                self.assert_wrapped(redis.StrictRedis.execute_command)
+                self.assert_wrapped(redis.StrictRedis.pipeline)
+                self.assert_wrapped(redis.Redis.pipeline)
+                self.assert_wrapped(redis.client.BasePipeline.execute)
+                self.assert_wrapped(redis.client.BasePipeline.immediate_execute_command)
 
             :param module: module to check
             :return: None
@@ -249,12 +252,12 @@ class PatchTestCase(object):
 
             So an appropriate assert_not_module_patched would look like::
 
-                def assert_not_module_patched(self, redis):
-                    self.assert_not_wrapped(redis.StrictRedis.execute_command)
-                    self.assert_not_wrapped(redis.StrictRedis.pipeline)
-                    self.assert_not_wrapped(redis.Redis.pipeline)
-                    self.assert_not_wrapped(redis.client.BasePipeline.execute)
-                    self.assert_not_wrapped(redis.client.BasePipeline.immediate_execute_command)
+            def assert_not_module_patched(self, redis):
+                self.assert_not_wrapped(redis.StrictRedis.execute_command)
+                self.assert_not_wrapped(redis.StrictRedis.pipeline)
+                self.assert_not_wrapped(redis.Redis.pipeline)
+                self.assert_not_wrapped(redis.client.BasePipeline.execute)
+                self.assert_not_wrapped(redis.client.BasePipeline.immediate_execute_command)
 
             :param module:
             :return: None
@@ -274,12 +277,12 @@ class PatchTestCase(object):
 
             So an appropriate assert_not_module_double_patched would look like::
 
-                def assert_not_module_double_patched(self, redis):
-                    self.assert_not_double_wrapped(redis.StrictRedis.execute_command)
-                    self.assert_not_double_wrapped(redis.StrictRedis.pipeline)
-                    self.assert_not_double_wrapped(redis.Redis.pipeline)
-                    self.assert_not_double_wrapped(redis.client.BasePipeline.execute)
-                    self.assert_not_double_wrapped(redis.client.BasePipeline.immediate_execute_command)
+            def assert_not_module_double_patched(self, redis):
+                self.assert_not_double_wrapped(redis.StrictRedis.execute_command)
+                self.assert_not_double_wrapped(redis.StrictRedis.pipeline)
+                self.assert_not_double_wrapped(redis.Redis.pipeline)
+                self.assert_not_double_wrapped(redis.client.BasePipeline.execute)
+                self.assert_not_double_wrapped(redis.client.BasePipeline.immediate_execute_command)
 
             :param module: module to check
             :return: None
@@ -414,7 +417,6 @@ class PatchTestCase(object):
             self.__unpatch_func__()
             self.assert_not_module_patched(module)
             self.__patch_func__()
-            self.__patch_func__()
             self.assert_module_patched(module)
 
         @raise_if_no_attrs
@@ -507,7 +509,6 @@ class PatchTestCase(object):
             """
             self.assert_not_module_imported(self.__module_name__)
             self.__unpatch_func__()
-            self.__patch_func__()
             self.__patch_func__()
             module = importlib.import_module(self.__module_name__)
             self.assert_module_patched(module)
