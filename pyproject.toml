@@ -125,7 +125,6 @@ exclude = '''
       | mongoengine
       | mysql
       | mysqldb
-      | patch.py
       | psycopg
       | pylibmc
       | pylons
