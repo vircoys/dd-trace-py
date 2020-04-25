@@ -17,7 +17,7 @@ def patch_aiohttp(tracer):
     import aiohttp
     pin = Pin.get_from(aiohttp.web_app.Application)
     original_tracer = pin.tracer
-    Pin.override(aiohttp, tracer=tracer)
+    Pin.override(aiohttp.web_app.Application, tracer=tracer)
 
     yield
 

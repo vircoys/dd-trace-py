@@ -64,11 +64,11 @@ config._add("aiohttp_client", dict(
 ))
 
 config._add("aiohttp_jinja2", dict(
-    service="aiohttp"
+    service="aiohttp",
 ))
 
 config._add("aiohttp_server", dict(
-    service="aiohttp.server",
+    service=config._get_service(default="aiohttp.server"),
     distributed_tracing_enabled=True,
 ))
 

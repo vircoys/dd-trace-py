@@ -290,15 +290,22 @@ _clientsession_wrap_methods = {
 }
 
 
-@with_modules("aiohttp", "aiohttp.web_app")
-def traced__handle(aiohttp, aiohttp_web_app, pin, cfg, wrapped, instance, args, kwargs):
-    with pin.tracer.trace("aiohttp.request", service=pin.service, span_type=SpanTypes.WEB) as span:
+@with_modules("aiohttp.web_app")
+async def traced__handle(aiohttp_web_app, pin, cfg, wrapped, instance, args, kwargs):
+    request = args[0]
+
+    resource = "%s %s" % (request.method, request.url.path)
+    with pin.tracer.trace("aiohttp.request", service=pin.service, resource=resource, span_type=SpanTypes.WEB) as span:
         span.set_tag(const.SPAN_MEASURED_KEY)
+
         # Configure trace search sample rate
         analytics_enabled = cfg["analytics_enabled"]
         if (config.analytics_enabled and analytics_enabled is not False) or analytics_enabled is True:
             span.set_tag(const.ANALYTICS_SAMPLE_RATE_KEY, cfg.get("analytics_sample_rate", True))
-        return wrapped(*args, **kwargs)
+
+        return await wrapped(*args, **kwargs)
+
+
 
 
 def patch_aiohttp_web_app(aiohttp_web_app):
@@ -313,7 +320,6 @@ def patch_aiohttp(aiohttp):
     Pin(
         config.aiohttp_client.service, app="aiohttp", _config=config.aiohttp_client
     ).onto(aiohttp.ClientSession)
-
     _w("aiohttp", "ClientSession.__init__", _wrap_clientsession_init)
 
     for method in _clientsession_wrap_methods:
