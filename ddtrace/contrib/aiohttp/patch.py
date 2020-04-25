@@ -1,41 +1,69 @@
 import functools
 import logging
+import sys
 
 from ddtrace import config
 from ddtrace.vendor import wrapt
+from ddtrace.internal import import_hooks
 
+from ... import constants as const
 from ...utils.wrappers import unwrap
 from ...propagation.http import HTTPPropagator
 from ...pin import Pin
-from ...ext import http as ext_http
+from ...ext import http as ext_http, SpanTypes
 from ..httplib.patch import should_skip_request
 
-import aiohttp
 from yarl import URL
 
-try:
-    # instrument external packages only if they're available
-    import aiohttp_jinja2
-    from .template import _trace_render_template
-except ImportError:
-    _trace_render_template = None
-
+_w = wrapt.wrap_function_wrapper
 
 log = logging.getLogger(__name__)
 
 propagator = HTTPPropagator()
 
 
-config._add("aiohttp_client", dict(
-    service="aiohttp.client",
-    distributed_tracing_enabled=False,
-    trace_headers=[],
-    trace_context=False,
-))
+def with_modules(*mods):
+    def f(func):
+        def wrapper(wrapped, instance, args, kwargs):
+            if hasattr(func, "__dd_cached"):
+                resolved_mods, pin = getattr(func, "__dd_cached")
+            else:
+                try:
+                    resolved_mods = [sys.modules[mod] for mod in mods]
+                except KeyError:
+                    return wrapped(*args, **kwargs)
+                else:
+                    pin = Pin._find(*resolved_mods, instance)
+                    if not pin or not pin.enabled():
+                        return wrapped(*args, **kwargs)
+                    setattr(func, "__dd_cached", (resolved_mods, pin))
+            return func(*resolved_mods, pin, pin._config, wrapped, instance, args, kwargs)
+        return wrapper
+    return f
 
-config._add("aiohttp_jinja", dict(
-    service="aiohttp"
-))
+
+def _trace_render_template(func, module, args, kwargs):
+    """
+    Trace the template rendering
+    """
+    # get the module pin
+    pin = Pin.get_from(aiohttp_jinja2)
+    if not pin or not pin.enabled():
+        return func(*args, **kwargs)
+
+    # original signature:
+    # render_template(template_name, request, context, *, app_key=APP_KEY, encoding='utf-8')
+    template_name = args[0]
+    request = args[1]
+    env = aiohttp_jinja2.get_env(request.app)
+
+    # the prefix is available only on PackageLoader
+    template_prefix = getattr(env.loader, 'package_path', '')
+    template_meta = '{}/{}'.format(template_prefix, template_name)
+
+    with pin.tracer.trace('aiohttp.template', span_type=SpanTypes.TEMPLATE) as span:
+        span.set_meta('aiohttp.template', template_meta)
+        return func(*args, **kwargs)
 
 
 def _get_url_obj(obj):
@@ -262,30 +290,64 @@ _clientsession_wrap_methods = {
 }
 
 
-def patch():
-    """
-    Patch aiohttp third party modules:
-        * aiohttp_jinja2
-        * aiohttp ClientSession request
-    """
+@with_modules("aiohttp", "aiohttp.web_app")
+def traced__handle(aiohttp, aiohttp_web_app, pin, cfg, wrapped, instance, args, kwargs):
+    with pin.tracer.trace("aiohttp.request", service=pin.service, span_type=SpanTypes.WEB) as span:
+        span.set_tag(const.SPAN_MEASURED_KEY)
+        # Configure trace search sample rate
+        analytics_enabled = cfg["analytics_enabled"]
+        if (config.analytics_enabled and analytics_enabled is not False) or analytics_enabled is True:
+            span.set_tag(const.ANALYTICS_SAMPLE_RATE_KEY, cfg.get("analytics_sample_rate", True))
+        return wrapped(*args, **kwargs)
 
-    _w = wrapt.wrap_function_wrapper
-    if not getattr(aiohttp, '__datadog_patch', False):
-        setattr(aiohttp, '__datadog_patch', True)
-        pin = Pin(config.aiohttp_client.service, app="aiohttp", _config=config.aiohttp_client)
-        pin.onto(aiohttp.ClientSession)
 
-        _w("aiohttp", "ClientSession.__init__", _wrap_clientsession_init)
+def patch_aiohttp_web_app(aiohttp_web_app):
+    Pin(
+        config.aiohttp_server.service, app="aiohttp", _config=config.aiohttp_server
+    ).onto(aiohttp_web_app.Application)
+    _w(aiohttp_web_app, "Application._handle", traced__handle)
 
-        for method in _clientsession_wrap_methods:
-            wrapper = functools.partial(_create_wrapped_request, method.upper())
-            _w('aiohttp', 'ClientSession.{}'.format(method), wrapper)
 
-    if _trace_render_template and not getattr(aiohttp_jinja2, '__datadog_patch', False):
+def patch_aiohttp(aiohttp):
+    # Patch the http client.
+    Pin(
+        config.aiohttp_client.service, app="aiohttp", _config=config.aiohttp_client
+    ).onto(aiohttp.ClientSession)
+
+    _w("aiohttp", "ClientSession.__init__", _wrap_clientsession_init)
+
+    for method in _clientsession_wrap_methods:
+        wrapper = functools.partial(_create_wrapped_request, method.upper())
+        _w('aiohttp', 'ClientSession.{}'.format(method), wrapper)
+
+    # Patch the http server.
+    import_hooks.register_module_hook("aiohttp.web_app", patch_aiohttp_web_app)
+
+
+def patch_aiohttp_jinja2(aiohttp_jinja2):
+    if not getattr(aiohttp_jinja2, '__datadog_patch', False):
         setattr(aiohttp_jinja2, '__datadog_patch', True)
 
         _w('aiohttp_jinja2', 'render_template', _trace_render_template)
-        Pin(config.aiohttp_jinja.service, app="aiohttp", _config=config.aiohttp_jinja).onto(aiohttp_jinja2)
+        Pin(config.aiohttp_jinja2.service, app="aiohttp", _config=config.aiohttp_jinja2).onto(aiohttp_jinja2)
+
+
+def patch():
+    _w = wrapt.wrap_function_wrapper
+    import aiohttp
+
+    if not getattr(aiohttp, '__datadog_patch', False):
+        setattr(aiohttp, '__datadog_patch', True)
+        patch_aiohttp(aiohttp)
+
+    try:
+        import aiohttp_jinja2
+    except ImportError:
+        pass
+    else:
+        if not getattr(aiohttp_jinja2, '__datadog_patch', False):
+            setattr(aiohttp_jinja2, '__datadog_patch', True)
+            patch_aiohttp_jinja2(aiohttp_jinja2)
 
 
 def unpatch():
@@ -303,3 +365,5 @@ def unpatch():
     if _trace_render_template and getattr(aiohttp_jinja2, '__datadog_patch', False):
         setattr(aiohttp_jinja2, '__datadog_patch', False)
         unwrap(aiohttp_jinja2, 'render_template')
+
+

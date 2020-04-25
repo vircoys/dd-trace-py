@@ -45,17 +45,30 @@ to the ``request`` object, so that it can be used in the application code::
         ctx = request['datadog_context']
         # do something with the tracing Context
 """
-from ...utils.importlib import require_modules
+from ddtrace import config
+from .patch import patch, unpatch
+from .middlewares import trace_app
 
-required_modules = ['aiohttp']
 
-with require_modules(required_modules) as missing_modules:
-    if not missing_modules:
-        from .patch import patch, unpatch
-        from .middlewares import trace_app
+__all__ = [
+    "patch",
+    "unpatch",
+    "trace_app",
+]
 
-        __all__ = [
-            'patch',
-            'unpatch',
-            'trace_app',
-        ]
+config._add("aiohttp_client", dict(
+    service="aiohttp.client",
+    distributed_tracing_enabled=False,
+    trace_headers=[],
+    trace_context=False,
+))
+
+config._add("aiohttp_jinja2", dict(
+    service="aiohttp"
+))
+
+config._add("aiohttp_server", dict(
+    service="aiohttp.server",
+    distributed_tracing_enabled=True,
+))
+

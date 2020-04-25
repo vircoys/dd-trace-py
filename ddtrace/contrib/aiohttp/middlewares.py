@@ -8,6 +8,7 @@ from ...propagation.http import HTTPPropagator
 from ...settings import config
 from ...context import Context
 
+
 try:
     from aiohttp.web import middleware
 
@@ -18,7 +19,7 @@ except ImportError:
     def middleware(f):
         return f
 
-
+'''
 CONFIG_KEY = "datadog_trace"
 REQUEST_CONTEXT_KEY = "datadog_context"
 REQUEST_CONFIG_KEY = "__datadog_trace_config"
@@ -26,11 +27,6 @@ REQUEST_SPAN_KEY = "__datadog_request_span"
 
 propagator = HTTPPropagator()
 
-
-config._add("aiohttp_server", dict(
-    service="aiohttp.server",
-    distributed_tracing_enabled=True,
-))
 
 
 @middleware
@@ -133,6 +129,7 @@ async def on_prepare(request, response):
     request_span.finish()
 
 
+# TODO: deprecate
 def trace_app(app, tracer, service="aiohttp-web"):
     """
     Tracing function that patches the ``aiohttp`` application so that it will be
@@ -164,3 +161,8 @@ def trace_app(app, tracer, service="aiohttp-web"):
     # and be sure that the on_prepare signal is the last one
     app.middlewares.insert(0, trace_middleware)
     app.on_response_prepare.append(on_prepare)
+'''
+
+
+def trace_app(app, tracer, service="aiohttp-web"):
+    pass
