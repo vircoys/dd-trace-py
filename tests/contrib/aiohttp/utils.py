@@ -2,6 +2,7 @@ import asyncio
 import pkg_resources
 
 import aiohttp
+from aiohttp import web
 from aiohttp.test_utils import AioHTTPTestCase
 
 from .app.web import setup_app
@@ -13,6 +14,14 @@ if pkg_resources.parse_version(aiohttp.__version__) >= pkg_resources.parse_versi
     AIOHTTP_33x = True
 else:
     AIOHTTP_33x = False
+
+
+async def hello(request):
+    return web.Response(text="Hello, world")
+
+
+async def error(request):
+    raise Exception("Failed!")
 
 
 class TraceTestCase(BaseTracerTestCase, AioHTTPTestCase):

@@ -12,6 +12,13 @@ def pytest_configure():
     patch()
 
 
+@pytest.fixture
+def tracer():
+    tracer = DummyTracer()
+    yield tracer
+    tracer.writer.pop()
+
+
 @pytest.fixture(autouse=True)
 def patch_aiohttp(tracer):
     import aiohttp
@@ -25,14 +32,5 @@ def patch_aiohttp(tracer):
 
 
 @pytest.fixture
-def tracer():
-    tracer = DummyTracer()
-    yield tracer
-    tracer.writer.pop()
-
-
-@pytest.fixture
 def spans(tracer):
-    container = TracerSpanContainer(tracer)
     yield tracer.writer.spans
-    container.reset()

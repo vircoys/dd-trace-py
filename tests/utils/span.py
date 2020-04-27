@@ -1,5 +1,7 @@
 from ddtrace.span import Span
 
+from . import assert_is_measured, assert_is_not_measured
+
 NO_CHILDREN = object()
 
 
@@ -30,6 +32,9 @@ class TestSpan(Span):
 
         # DEV: Use `object.__setattr__` to by-pass this class's `__setattr__`
         object.__setattr__(self, '_span', span)
+
+    assert_is_measured = assert_is_measured
+    assert_is_not_measured = assert_is_not_measured
 
     def __getattr__(self, key):
         """
@@ -139,6 +144,8 @@ class TestSpan(Span):
                     '{0!r} property {1}: {2!r} != {3!r}'
                     .format(self, name, getattr(self, name), value)
                 )
+
+        return self
 
     def assert_meta(self, meta, exact=False):
         """
