@@ -14,19 +14,6 @@ python35_image: &python35_image circleci/python:3.5
 python27_image: &python27_image circleci/python:2.7
 ddtrace_dev_image: &ddtrace_dev_image datadog/dd-trace-py:latest
 datadog_agent_image: &datadog_agent_image datadog/docker-dd-agent:latest
-redis_image: &redis_image redis:4.0-alpine
-rediscluster_image: &rediscluster_image grokzen/redis-cluster:4.0.9
-memcached_image: &memcached_image memcached:1.5-alpine
-cassandra_image: &cassandra_image cassandra:3.11.7
-consul_image: &consul_image consul:1.6.0
-moto_image: &moto_image palazzem/moto:1.0.1
-elasticsearch_image: &elasticsearch_image elasticsearch:2.3
-mysql_image: &mysql_image mysql:5.7
-postgres_image: &postgres_image postgres:10.5-alpine
-mongo_image: &mongo_image mongo:3.6
-httpbin_image: &httpbin_image kennethreitz/httpbin@sha256:2c7abc4803080c22928265744410173b6fea3b898872c01c5fd0f0f9df4a59fb
-vertica_image: &vertica_image sumitchawla/vertica:latest
-rabbitmq_image: &rabbitmq_image rabbitmq:3.7-alpine
 
 orbs:
   win: circleci/windows@2.2.0
@@ -112,8 +99,6 @@ commands:
         type: string
         default: ""
     steps:
-      - checkout
-      - setup_tox
       - restore_tox_cache
       - when:
           condition:
@@ -124,7 +109,7 @@ commands:
                 command: tox -e 'wait' << parameters.wait >>
       - run:
           name: "Run scripts/run-tox-scenario"
-          command: scripts/run-tox-scenario '<< parameters.pattern >>'
+          command: scripts/ddtest scripts/run-tox-scenario '<< parameters.pattern >>'
       - save_tox_cache
 
   test_build:
@@ -171,10 +156,6 @@ executors:
 
 # Common configuration blocks as YAML anchors
 # See: https://circleci.com/blog/circleci-hacks-reuse-yaml-in-your-circleci-config-with-yaml/
-httpbin_local: &httpbin_local
-  image: *httpbin_image
-  name: httpbin.org
-
 deploy_docs_filters: &deploy_docs_filters
   filters:
     tags:
@@ -188,21 +169,6 @@ datadog_agent: &datadog_agent
     DD_APM_ENABLED: true
     DD_BIND_HOST: 0.0.0.0
     DD_API_KEY: invalid_key_but_this_is_fine
-
-mysql_server: &mysql_server
-  image: *mysql_image
-  environment:
-    - MYSQL_ROOT_PASSWORD=admin
-    - MYSQL_PASSWORD=test
-    - MYSQL_USER=test
-    - MYSQL_DATABASE=test
-
-postgres_server: &postgres_server
-  image: *postgres_image
-  environment:
-    - POSTGRES_PASSWORD=postgres
-    - POSTGRES_USER=postgres
-    - POSTGRES_DB=postgres
 
 jobs:
   black:
@@ -296,388 +262,422 @@ jobs:
           pattern: '^py..-profile'
 
   integration:
-    executor: ddtrace_dev
-    docker:
-      - image: *ddtrace_dev_image
-        environment:
-          TEST_DATADOG_INTEGRATION: 1
-      - *datadog_agent
+    <<: *machine_executor
     steps:
+      - checkout
+      - run: docker-compose up -d ddagent
+      - run:
+          command: docker-compose logs -f
+          background: true
       - run_tox_scenario:
           pattern: '^py..-integration'
 
+  ddtracerun:
+    <<: *machine_executor
+    steps:
+      - checkout
+      - run: docker-compose up -d redis
+      - run:
+          command: docker-compose logs -f
+          background: true
+      - run_tox_scenario:
+          pattern: '^py..-ddtracerun$'
+
+  aiopg:
+    <<: *machine_executor
+    steps:
+      - checkout
+      - run: docker-compose up -d rabbitmq
+      - run:
+          command: docker-compose logs -f
+          background: true
+      - run_tox_scenario:
+          pattern: '^aiopg_contrib-'
+
+  asyncio:
+    <<: *machine_executor
+    steps:
+      - run_tox_scenario:
+          pattern: '^asyncio_contrib-'
+
   futures:
-    executor: ddtrace_dev
+    <<: *machine_executor
     steps:
       - run_tox_scenario:
           pattern: '^futures_contrib-'
 
   boto:
-    executor: ddtrace_dev
+    <<: *machine_executor
     steps:
       - run_tox_scenario:
           pattern: '^boto\(core\)\?_contrib-'
 
-  ddtracerun:
-    executor: ddtrace_dev
-    docker:
-      - image: *ddtrace_dev_image
-      - image: *redis_image
+  aiobotocore:
+    <<: *machine_executor
     steps:
+      - checkout
+      - run: docker-compose up -d moto
+      - run:
+          command: docker-compose logs -f
+          background: true
       - run_tox_scenario:
-          pattern: '^py..-ddtracerun$'
-
-  test_utils:
-    executor: ddtrace_dev
-    steps:
-      - run_tox_scenario:
-          pattern: '^py..-test_utils$'
-
-  test_logging:
-    executor: ddtrace_dev
-    steps:
-      - run_tox_scenario:
-          pattern: '^py..-test_logging$'
-
-  asyncio:
-    executor: ddtrace_dev
-    steps:
-      - run_tox_scenario:
-          pattern: '^asyncio_contrib-'
-
-  pylons:
-    executor: ddtrace_dev
-    steps:
-      - run_tox_scenario:
-          pattern: '^pylons_contrib-'
+          pattern: '^aiobotocore_contrib'
 
   aiohttp:
-    executor: ddtrace_dev
+    <<: *machine_executor
     steps:
       - run_tox_scenario:
           pattern: '^aiohttp_contrib-'
 
+  algoliasearch:
+    <<: *machine_executor
+    steps:
+      - run_tox_scenario:
+          pattern: '^algoliasearch_contrib-'
+
   asgi:
-    executor: ddtrace_dev
+    <<: *machine_executor
     steps:
       - run_tox_scenario:
           pattern: '^asgi_contrib-'
 
-  tornado:
-    executor: ddtrace_dev
-    steps:
-      - run_tox_scenario:
-          pattern: '^tornado_contrib-'
-
   bottle:
-    executor: ddtrace_dev
+    <<: *machine_executor
     steps:
       - run_tox_scenario:
           pattern: '^bottle_contrib\(_autopatch\)\?-'
 
   cassandra:
-    executor: ddtrace_dev
-    docker:
-      - image: *ddtrace_dev_image
-        environment:
-          CASS_DRIVER_NO_EXTENSIONS: 1
-      - image: *cassandra_image
-        environment:
-          - MAX_HEAP_SIZE=512M
-          - HEAP_NEWSIZE=256M
+    <<: *machine_executor
     steps:
+      - checkout
+      - run: docker-compose up -d cassandra
+      - run:
+          command: docker-compose logs -f
+          background: true
       - run_tox_scenario:
-          wait: cassandra
           pattern: '^cassandra_contrib-'
 
   celery:
-    executor: ddtrace_dev
-    docker:
-      - image: *ddtrace_dev_image
-      - image: redis:4.0-alpine
+    <<: *machine_executor
     steps:
+      - checkout
+      - run: docker-compose up -d redis
+      - run:
+          command: docker-compose logs -f
+          background: true
       - run_tox_scenario:
           pattern: '^celery_contrib-'
 
   consul:
-    executor: ddtrace_dev
-    docker:
-      - image: *ddtrace_dev_image
-      - image: *consul_image
+    <<: *machine_executor
     steps:
+      - checkout
+      - run: docker-compose up -d consul
+      - run:
+          command: docker-compose logs -f
+          background: true
       - run_tox_scenario:
           pattern: '^consul_contrib-'
 
   dogpile_cache:
-    executor: ddtrace_dev
+    <<: *machine_executor
     steps:
       - run_tox_scenario:
           pattern: '^dogpile_contrib-'
 
   elasticsearch:
-    executor: ddtrace_dev
-    docker:
-      - image: *ddtrace_dev_image
-      - image: *elasticsearch_image
+    <<: *machine_executor
     steps:
+      - checkout
+      - run: docker-compose up -d elasticsearch
+      - run:
+          command: docker-compose logs -f
+          background: true
       - run_tox_scenario:
           pattern: '^elasticsearch_contrib-'
 
-  falcon:
-    executor: ddtrace_dev
+  dbapi:
+    <<: *machine_executor
     steps:
       - run_tox_scenario:
-          pattern: '^falcon_contrib'
+          pattern: '^dbapi_contrib-'
 
   django:
-    executor: ddtrace_dev
-    docker:
-      - image: *ddtrace_dev_image
-      - image: *redis_image
-      - image: *memcached_image
-      - *datadog_agent
+    <<: *machine_executor
     steps:
+      - checkout
+      - run: docker-compose up -d redis memcached ddagent
+      - run:
+          command: docker-compose logs -f
+          background: true
       - run_tox_scenario:
           pattern: '^django_contrib'
 
   djangorestframework:
-    executor: ddtrace_dev
-    docker:
-      - image: *ddtrace_dev_image
-      - image: *redis_image
-      - image: *memcached_image
-      - *datadog_agent
+    <<: *machine_executor
     steps:
+      - checkout
+      - run: docker-compose up -d redis memcached ddagent
+      - run:
+          command: docker-compose logs -f
+          background: true
       - run_tox_scenario:
           pattern: '^django_drf_contrib'
 
-  flask:
-    executor: ddtrace_dev
-    docker:
-      - image: *ddtrace_dev_image
-      - image: *redis_image
-      - image: *memcached_image
+  falcon:
+    <<: *machine_executor
     steps:
+      - run_tox_scenario:
+          pattern: '^falcon_contrib'
+
+  flask:
+    <<: *machine_executor
+    steps:
+      - checkout
+      - run: docker-compose up -d redis memcached
+      - run:
+          command: docker-compose logs -f
+          background: true
       - run_tox_scenario:
           pattern: '^flask_\(cache_\)\?contrib\(_autopatch\)\?-'
 
   gevent:
-    executor: ddtrace_dev
+    <<: *machine_executor
     steps:
       - run_tox_scenario:
           pattern: '^gevent_contrib-'
 
   httplib:
-    executor: ddtrace_dev
+    <<: *machine_executor
     steps:
       - run_tox_scenario:
           pattern: '^httplib_contrib'
 
   grpc:
-    executor: ddtrace_dev
+    <<: *machine_executor
     steps:
       - run_tox_scenario:
           pattern: '^grpc_contrib-'
 
+  jinja2:
+    <<: *machine_executor
+    steps:
+      - run_tox_scenario:
+          pattern: '^jinja2_contrib-'
+
+  kombu:
+    <<: *machine_executor
+    steps:
+      - checkout
+      - run: docker-compose up -d rabbitmq
+      - run:
+          command: docker-compose logs -f
+          background: true
+      - run_tox_scenario:
+          pattern: '^kombu_contrib-'
+
+  logging:
+    <<: *machine_executor
+    steps:
+      - run_tox_scenario:
+          pattern: '^py..-test_logging$'
+
+  mako:
+    <<: *machine_executor
+    steps:
+      - run_tox_scenario:
+          pattern: '^mako_contrib-'
+
   molten:
-    executor: ddtrace_dev
+    <<: *machine_executor
     steps:
       - run_tox_scenario:
           pattern: '^molten_contrib-'
 
   mysqlconnector:
-    executor: ddtrace_dev
-    docker:
-      - image: *ddtrace_dev_image
-      - *mysql_server
+    <<: *machine_executor
     steps:
+      - checkout
+      - run: docker-compose up -d mysql
+      - run:
+          command: docker-compose logs -f
+          background: true
       - run_tox_scenario:
-          wait: mysql
           pattern: '^mysql_contrib-.*-mysqlconnector'
 
   mysqlpython:
-    executor: ddtrace_dev
-    docker:
-      - image: *ddtrace_dev_image
-      - *mysql_server
+    <<: *machine_executor
     steps:
+      - checkout
+      - run: docker-compose up -d mysql
+      - run:
+          command: docker-compose logs -f
+          background: true
       - run_tox_scenario:
-          wait: mysql
           pattern: '^mysqldb_contrib-.*-mysqlclient'
 
   mysqldb:
-    executor: ddtrace_dev
-    docker:
-      - image: *ddtrace_dev_image
-      - *mysql_server
+    <<: *machine_executor
     steps:
+      - checkout
+      - run: docker-compose up -d mysql
+      - run:
+          command: docker-compose logs -f
+          background: true
       - run_tox_scenario:
-          wait: mysql
           pattern: '^mysqldb_contrib-.*-mysqldb'
 
-  pymysql:
-    executor: ddtrace_dev
-    docker:
-      - image: *ddtrace_dev_image
-      - *mysql_server
-    steps:
-      - run_tox_scenario:
-          wait: mysql
-          pattern: '^pymysql_contrib-'
-
-  pylibmc:
-    executor: ddtrace_dev
-    docker:
-      - image: *ddtrace_dev_image
-      - image: *memcached_image
-    steps:
-      - run_tox_scenario:
-          pattern: '^pylibmc_contrib-'
-
-  pymemcache:
-    executor: ddtrace_dev
-    docker:
-      - image: *ddtrace_dev_image
-      - image: *memcached_image
-    steps:
-      - run_tox_scenario:
-          pattern: '^pymemcache_contrib\(_autopatch\)\?-'
-
   mongoengine:
-    executor: ddtrace_dev
-    docker:
-      - image: *ddtrace_dev_image
-      - image: *mongo_image
+    <<: *machine_executor
     steps:
+      - checkout
+      - run: docker-compose up -d mongo
+      - run:
+          command: docker-compose logs -f
+          background: true
       - run_tox_scenario:
           pattern: '^mongoengine_contrib-'
 
-  pymongo:
-    executor: ddtrace_dev
-    docker:
-      - image: *ddtrace_dev_image
-      - image: *mongo_image
+  psycopg:
+    <<: *machine_executor
     steps:
+      - checkout
+      - run: docker-compose up -d postgres
+      - run:
+          command: docker-compose logs -f
+          background: true
+      - run_tox_scenario:
+          pattern: '^psycopg_contrib-'
+
+  pylibmc:
+    <<: *machine_executor
+    steps:
+      - checkout
+      - run: docker-compose up -d memcached
+      - run:
+          command: docker-compose logs -f
+          background: true
+      - run_tox_scenario:
+          pattern: '^pylibmc_contrib-'
+
+  pylons:
+    <<: *machine_executor
+    steps:
+      - run_tox_scenario:
+          pattern: '^pylons_contrib-'
+
+  pymysql:
+    <<: *machine_executor
+    steps:
+      - checkout
+      - run: docker-compose up -d mysql
+      - run:
+          command: docker-compose logs -f
+          background: true
+      - run_tox_scenario:
+          pattern: '^pymysql_contrib-'
+
+  pymemcache:
+    <<: *machine_executor
+    steps:
+      - checkout
+      - run: docker-compose up -d memcached
+      - run:
+          command: docker-compose logs -f
+          background: true
+      - run_tox_scenario:
+          pattern: '^pymemcache_contrib\(_autopatch\)\?-'
+
+  pymongo:
+    <<: *machine_executor
+    steps:
+      - checkout
+      - run: docker-compose up -d mongo
+      - run:
+          command: docker-compose logs -f
+          background: true
       - run_tox_scenario:
           pattern: '^pymongo_contrib-'
 
   pyramid:
-    executor: ddtrace_dev
+    <<: *machine_executor
     steps:
       - run_tox_scenario:
           pattern: '^pyramid_contrib\(_autopatch\)\?-'
 
   requests:
-    executor: ddtrace_dev
-    docker:
-      - image: *ddtrace_dev_image
-      - *httpbin_local
+    <<: *machine_executor
     steps:
+      - checkout
+      - run: docker-compose up -d httpbin
+      - run:
+          command: docker-compose logs -f
+          background: true
       - run_tox_scenario:
           pattern: '^requests_contrib\(_autopatch\)\?-'
 
   requestsgevent:
-    executor: ddtrace_dev
+    <<: *machine_executor
     steps:
       - run_tox_scenario:
           pattern: '^requests_gevent_contrib-'
 
   sanic:
-    executor: ddtrace_dev
+    <<: *machine_executor
     steps:
       - run_tox_scenario:
           pattern: '^sanic_contrib-'
 
   sqlalchemy:
-    executor: ddtrace_dev
-    docker:
-      - image: *ddtrace_dev_image
-      - *postgres_server
-      - *mysql_server
+    <<: *machine_executor
     steps:
+      - checkout
+      - run: docker-compose up -d postgres mysql
+      - run:
+          command: docker-compose logs -f
+          background: true
       - run_tox_scenario:
-          wait: postgres mysql
           pattern: '^sqlalchemy_contrib-'
 
-  dbapi:
-    executor: ddtrace_dev
+  tornado:
+    <<: *machine_executor
     steps:
       - run_tox_scenario:
-          pattern: '^dbapi_contrib-'
-
-  psycopg:
-    executor: ddtrace_dev
-    docker:
-      - image: *ddtrace_dev_image
-      - *postgres_server
-    steps:
-      - run_tox_scenario:
-          wait: postgres
-          pattern: '^psycopg_contrib-'
-
-  aiobotocore:
-    executor: ddtrace_dev
-    docker:
-      - image: *ddtrace_dev_image
-      - image: *moto_image
-    steps:
-      - run_tox_scenario:
-          pattern: '^aiobotocore_contrib'
-
-  aiopg:
-    executor: ddtrace_dev
-    docker:
-      - image: *ddtrace_dev_image
-      - *postgres_server
-    steps:
-      - run_tox_scenario:
-          wait: postgres
-          pattern: '^aiopg_contrib-'
+          pattern: '^tornado_contrib-'
 
   redis:
-    executor: ddtrace_dev
-    docker:
-      - image: *ddtrace_dev_image
-      - image: *redis_image
+    <<: *machine_executor
     steps:
+      - checkout
+      - run: docker-compose up -d redis
+      - run:
+          command: docker-compose logs -f
+          background: true
       - run_tox_scenario:
           pattern: '^redis_contrib-'
 
   rediscluster:
-    executor: ddtrace_dev
-    docker:
-      - image: *ddtrace_dev_image
-      - image: *rediscluster_image
-        environment:
-          - IP=0.0.0.0
+    <<: *machine_executor
     steps:
+      - checkout
+      - run: docker-compose up -d rediscluster
+      - run:
+          command: docker-compose logs -f
+          background: true
       - run_tox_scenario:
-          wait: rediscluster
           pattern: '^rediscluster_contrib-'
 
   vertica:
-    executor: ddtrace_dev
-    docker:
-      - image: *ddtrace_dev_image
-      - image: *vertica_image
-        environment:
-          - VP_TEST_USER=dbadmin
-          - VP_TEST_PASSWORD=abc123
-          - VP_TEST_DATABASE=docker
+    <<: *machine_executor
     steps:
+      - checkout
+      - run: docker-compose up -d vertica
+      - run:
+          command: docker-compose logs -f
+          background: true
       - run_tox_scenario:
-          wait: vertica
           pattern: '^vertica_contrib-'
-
-  kombu:
-    executor: ddtrace_dev
-    docker:
-      - image: *ddtrace_dev_image
-      - image: *rabbitmq_image
-    steps:
-      - run_tox_scenario:
-          wait: rabbitmq
-          pattern: '^kombu_contrib-'
 
   sqlite3:
     executor: ddtrace_dev
@@ -725,24 +725,6 @@ jobs:
       - checkout
       - *pyenv-set-global
       - deploy_wheels
-
-  jinja2:
-    executor: ddtrace_dev
-    steps:
-      - run_tox_scenario:
-          pattern: '^jinja2_contrib-'
-
-  mako:
-    executor: ddtrace_dev
-    steps:
-      - run_tox_scenario:
-          pattern: '^mako_contrib-'
-
-  algoliasearch:
-    executor: ddtrace_dev
-    steps:
-      - run_tox_scenario:
-          pattern: '^algoliasearch_contrib-'
 
   build_docs:
     # deploy official documentation
@@ -827,8 +809,7 @@ requires_tests: &requires_tests
   - test_build_py36
   - test_build_py35
   - test_build_py27
-  - test_utils
-  - test_logging
+  - logging
   - tracer
   - tornado
   - vertica
@@ -920,8 +901,7 @@ workflows:
       - sanic: *requires_pre_test
       - sqlalchemy: *requires_pre_test
       - sqlite3: *requires_pre_test
-      - test_utils: *requires_pre_test
-      - test_logging: *requires_pre_test
+      - logging: *requires_pre_test
       - tornado: *requires_pre_test
       # tracer
       - tracer: *requires_pre_test
