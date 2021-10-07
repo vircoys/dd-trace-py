@@ -629,6 +629,8 @@ class Tracer(object):
             p.on_span_start(span)
 
         self._hooks.emit(self.__class__.start_span, span)
+        if self.log.isEnabledFor(logging.DEBUG):
+            self.log.debug("started span %s", span.pprint())
         return span
 
     start_span = _start_span
@@ -651,6 +653,9 @@ class Tracer(object):
 
         for p in self._span_processors:
             p.on_span_finish(span)
+
+        if self.log.isEnabledFor(logging.DEBUG):
+            self.log.debug("post processor span %s (enabled:%s)", span.pprint(), self.enabled)
 
     def _initialize_span_processors(self):
         # type: () -> None
