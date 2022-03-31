@@ -202,6 +202,51 @@ venv = Venv(
             command="pytest {cmdargs} tests/appsec",
         ),
         Venv(
+            name="gevent",
+            pkgs={
+                # sslmodules
+                "pynamodb": latest,
+                "elasticsearch": latest,
+                "requests": latest,
+                "botocore": latest,
+            },
+            venvs=[
+                Venv(
+                    pys=select_pys(max_version="2.7"),
+                    pkgs={
+                        "gevent": ["~=1.1", "~=1.2", "~=1.3"],
+                    },
+                ),
+                Venv(
+                    pkgs={
+                        # sslmodules3
+                        "aiohttp": latest,
+                        "aiobotocore": latest,
+                        "aiobotocore": latest,
+                    },
+                    venvs=[
+                        Venv(
+                            pys=select_pys(min_version="3.6", max_version="3.7"),
+                            pkgs={"gevent": ["~=1.1", "~=1.2", "~=1.3"]},
+                        ),
+                        Venv(
+                            pys=select_pys(min_version="3.7", max_version="3.8"),
+                            pkgs={"gevent": ["~=1.3", "~=1.4"]},
+                        ),
+                        Venv(
+                            pys="3.9",
+                            pkgs={"gevent": ["~=20.9", "~=20.12", "~=21.1"]},
+                        ),
+                        Venv(
+                            pys="3.10",
+                            pkgs={"gevent": "~=21.8"},
+                        ),
+                    ],
+                ),
+            ],
+            command="pytest {cmdargs} tests/contrib/gevent ",
+        ),
+        Venv(
             pys=select_pys(),
             pkgs={"pytest-benchmark": latest, "msgpack": latest},
             venvs=[

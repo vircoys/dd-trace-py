@@ -618,8 +618,8 @@ jobs:
   gevent:
     <<: *contrib_job
     steps:
-      - run_tox_scenario:
-          pattern: '^gevent_contrib-'
+      - run_test:
+          pattern: 'gevent'
 
   grpc:
     <<: *machine_executor
