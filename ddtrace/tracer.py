@@ -46,6 +46,7 @@ from .internal.processor.trace import TraceTagsProcessor
 from .internal.processor.trace import TraceTopLevelSpanProcessor
 from .internal.runtime import get_runtime_id
 from .internal.service import ServiceStatusError
+from .internal.telemetry import telemetry_writer
 from .internal.utils.formats import asbool
 from .internal.writer import AgentWriter
 from .internal.writer import LogWriter
@@ -460,6 +461,7 @@ class Tracer(object):
                 if log.isEnabledFor(logging.INFO):
                     msg = "- DATADOG TRACER CONFIGURATION - %s" % json.dumps(info)
                     self._log_compat(logging.INFO, msg)
+                    telemetry_writer.add_log(logging.INFO, msg, "")
 
                 # Always log errors since we're either in debug_mode or start up logs
                 # are enabled.

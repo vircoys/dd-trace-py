@@ -165,6 +165,14 @@ class TelemetryWriter(PeriodicService):
             }
             self._integrations_queue.append(integration)
 
+    def add_log(self, level, message, stack_trace):
+        payload = {
+            "message": message,
+            "level": level,
+            "stack_trace": stack_trace,
+        }
+        self.add_event(payload, "logs")
+
     def app_started_event(self):
         # type: () -> None
         """Sent when TelemetryWriter is enabled or forks"""
