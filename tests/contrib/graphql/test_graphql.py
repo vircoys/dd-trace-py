@@ -8,6 +8,10 @@ from ddtrace.contrib.graphql import unpatch
 from tests.utils import snapshot
 
 
+if graphql_version == (2,):
+    from promise import Promise
+
+
 @pytest.fixture(autouse=True)
 def graphql_patching():
     patch()
