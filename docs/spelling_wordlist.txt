@@ -181,3 +181,5 @@ yaaredis
 Kinesis
 AppSec
 libddwaf
+Serverless
+serverless
