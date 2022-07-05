@@ -1,0 +1,115 @@
+[[
+  {
+    "name": "flask.request",
+    "service": "flask",
+    "resource": "GET 404",
+    "trace_id": 0,
+    "span_id": 1,
+    "parent_id": 0,
+    "type": "web",
+    "meta": {
+      "_dd.appsec.json": "{\"triggers\":[{\"rule\":{\"id\":\"nfd-000-006\",\"name\":\"Detect failed attempt to fetch sensitive files\",\"tags\":{\"type\":\"security_scanner\",\"category\":\"attack_attempt\"}},\"rule_matches\":[{\"operator\":\"match_regex\",\"operator_value\":\"^404$\",\"parameters\":[{\"address\":\"server.response.status\",\"key_path\":[],\"value\":\"404\",\"highlight\":[\"404\"]}]},{\"operator\":\"match_regex\",\"operator_value\":\"\\\\.(cgi|bat|dll|exe|key|cert|crt|pem|der|pkcs|pkcs|pkcs[0-9]*|nsf|jsa|war|java|class|vb|vba|so|git|svn|hg|cvs)([^a-zA-Z0-9_]|$)\",\"parameters\":[{\"address\":\"server.request.uri.raw\",\"key_path\":[],\"value\":\"http://localhost/.git?q=1\",\"highlight\":[\".git?\"]}]}]}]}",
+      "_dd.origin": "appsec",
+      "_dd.p.dm": "-4",
+      "_dd.runtime_family": "python",
+      "appsec.event": "true",
+      "flask.version": "0.12.5",
+      "http.method": "GET",
+      "http.request.headers.host": "localhost",
+      "http.request.headers.user-agent": "werkzeug/0.16.1",
+      "http.status_code": "404",
+      "http.url": "http://localhost/.git",
+      "runtime-id": "418e95122cd748bb988ceea9242f3d99"
+    },
+    "metrics": {
+      "_dd.agent_psr": 1.0,
+      "_dd.appsec.enabled": 1.0,
+      "_dd.measured": 1,
+      "_dd.top_level": 1,
+      "_dd.tracer_kr": 1.0,
+      "_sampling_priority_v1": 2,
+      "system.pid": 37079
+    },
+    "duration": 1056000,
+    "start": 1657053621400038000
+  },
+     {
+       "name": "flask.try_trigger_before_first_request_functions",
+       "service": "flask",
+       "resource": "flask.try_trigger_before_first_request_functions",
+       "trace_id": 0,
+       "span_id": 2,
+       "parent_id": 1,
+       "duration": 39000,
+       "start": 1657053621400531000
+     },
+     {
+       "name": "flask.preprocess_request",
+       "service": "flask",
+       "resource": "flask.preprocess_request",
+       "trace_id": 0,
+       "span_id": 3,
+       "parent_id": 1,
+       "duration": 44000,
+       "start": 1657053621400634000
+     },
+     {
+       "name": "flask.dispatch_request",
+       "service": "flask",
+       "resource": "flask.dispatch_request",
+       "trace_id": 0,
+       "span_id": 4,
+       "parent_id": 1,
+       "duration": 17000,
+       "start": 1657053621400708000
+     },
+     {
+       "name": "flask.handle_user_exception",
+       "service": "flask",
+       "resource": "flask.handle_user_exception",
+       "trace_id": 0,
+       "span_id": 5,
+       "parent_id": 1,
+       "duration": 60000,
+       "start": 1657053621400752000
+     },
+        {
+          "name": "flask.handle_http_exception",
+          "service": "flask",
+          "resource": "flask.handle_http_exception",
+          "trace_id": 0,
+          "span_id": 9,
+          "parent_id": 5,
+          "duration": 21000,
+          "start": 1657053621400780000
+        },
+     {
+       "name": "flask.process_response",
+       "service": "flask",
+       "resource": "flask.process_response",
+       "trace_id": 0,
+       "span_id": 6,
+       "parent_id": 1,
+       "duration": 15000,
+       "start": 1657053621400931000
+     },
+     {
+       "name": "flask.do_teardown_request",
+       "service": "flask",
+       "resource": "flask.do_teardown_request",
+       "trace_id": 0,
+       "span_id": 7,
+       "parent_id": 1,
+       "duration": 15000,
+       "start": 1657053621401017000
+     },
+     {
+       "name": "flask.do_teardown_appcontext",
+       "service": "flask",
+       "resource": "flask.do_teardown_appcontext",
+       "trace_id": 0,
+       "span_id": 8,
+       "parent_id": 1,
+       "duration": 12000,
+       "start": 1657053621401068000
+     }]]

@@ -1,0 +1,66 @@
+[[
+  {
+    "name": "flask.jsonify",
+    "service": null,
+    "resource": "flask.jsonify",
+    "trace_id": 0,
+    "span_id": 1,
+    "parent_id": 0,
+    "meta": {
+      "_dd.p.dm": "-0",
+      "runtime-id": "8d0be1a71f5f4e5885c3182fe3eade7a"
+    },
+    "metrics": {
+      "_dd.agent_psr": 1.0,
+      "_dd.top_level": 1,
+      "_dd.tracer_kr": 1.0,
+      "_sampling_priority_v1": 1,
+      "system.pid": 40637
+    },
+    "duration": 275000,
+    "start": 1657054172258123000
+  }],
+[
+  {
+    "name": "flask.do_teardown_request",
+    "service": "flask",
+    "resource": "flask.do_teardown_request",
+    "trace_id": 1,
+    "span_id": 1,
+    "parent_id": 0,
+    "meta": {
+      "_dd.p.dm": "-0",
+      "runtime-id": "8d0be1a71f5f4e5885c3182fe3eade7a"
+    },
+    "metrics": {
+      "_dd.agent_psr": 1.0,
+      "_dd.top_level": 1,
+      "_dd.tracer_kr": 1.0,
+      "_sampling_priority_v1": 1,
+      "system.pid": 40637
+    },
+    "duration": 74000,
+    "start": 1657054172261774000
+  }],
+[
+  {
+    "name": "flask.do_teardown_appcontext",
+    "service": "flask",
+    "resource": "flask.do_teardown_appcontext",
+    "trace_id": 2,
+    "span_id": 1,
+    "parent_id": 0,
+    "meta": {
+      "_dd.p.dm": "-0",
+      "runtime-id": "8d0be1a71f5f4e5885c3182fe3eade7a"
+    },
+    "metrics": {
+      "_dd.agent_psr": 1.0,
+      "_dd.top_level": 1,
+      "_dd.tracer_kr": 1.0,
+      "_sampling_priority_v1": 1,
+      "system.pid": 40637
+    },
+    "duration": 35000,
+    "start": 1657054172261943000
+  }]]

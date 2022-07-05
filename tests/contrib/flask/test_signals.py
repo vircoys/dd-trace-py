@@ -4,6 +4,7 @@ import mock
 from ddtrace import Pin
 from ddtrace.contrib.flask import unpatch
 from ddtrace.contrib.flask.patch import flask_version
+from tests.utils import snapshot
 
 from . import BaseFlaskTestCase
 
@@ -86,6 +87,7 @@ class FlaskSignalsTestCase(BaseFlaskTestCase):
             receivers_for = getattr(signal, "receivers_for")
             self.assert_is_not_wrapped(receivers_for)
 
+    @snapshot(ignores=["meta.flask.version"])
     def test_signals(self):
         """
         When a signal is connected
@@ -97,18 +99,7 @@ class FlaskSignalsTestCase(BaseFlaskTestCase):
             # Ensure our handler was called
             func.assert_called_once_with(self.app)
 
-            # Assert number of spans created
-            spans = self.get_spans()
-            self.assertEqual(len(spans), 1)
-
-            # Assert the span that was created
-            span = spans[0]
-            self.assertEqual(span.service, "flask")
-            self.assertEqual(span.name, "tests.contrib.flask.{}".format(signal_name))
-            self.assertEqual(span.resource, "tests.contrib.flask.{}".format(signal_name))
-            self.assertEqual(set(span.get_tags().keys()), set(["flask.signal", "runtime-id", "_dd.p.dm"]))
-            self.assertEqual(span.get_tag("flask.signal"), signal_name)
-
+    @snapshot(ignores=["meta.flask.version"])
     def test_signals_multiple(self):
         """
         When a signal is connected
@@ -132,26 +123,7 @@ class FlaskSignalsTestCase(BaseFlaskTestCase):
         request_started_a.assert_called_once_with(self.app)
         request_started_b.assert_called_once_with(self.app)
 
-        # Assert number of spans created
-        spans = self.get_spans()
-        self.assertEqual(len(spans), 2)
-
-        # Assert the span that was created
-        span_a = spans[0]
-        self.assertEqual(span_a.service, "flask")
-        self.assertEqual(span_a.name, "tests.contrib.flask.request_started_a")
-        self.assertEqual(span_a.resource, "tests.contrib.flask.request_started_a")
-        self.assertEqual(set(span_a.get_tags().keys()), set(["flask.signal", "runtime-id", "_dd.p.dm"]))
-        self.assertEqual(span_a.get_tag("flask.signal"), "request_started")
-
-        # Assert the span that was created
-        span_b = spans[1]
-        self.assertEqual(span_b.service, "flask")
-        self.assertEqual(span_b.name, "tests.contrib.flask.request_started_b")
-        self.assertEqual(span_b.resource, "tests.contrib.flask.request_started_b")
-        self.assertEqual(set(span_b.get_tags().keys()), set(["flask.signal", "runtime-id", "_dd.p.dm"]))
-        self.assertEqual(span_b.get_tag("flask.signal"), "request_started")
-
+    @snapshot(ignores=["meta.flask.version"])
     def test_signals_pin_disabled(self):
         """
         When a signal is connected
@@ -167,7 +139,3 @@ class FlaskSignalsTestCase(BaseFlaskTestCase):
 
             # Ensure our function was called by the signal
             func.assert_called_once_with(self.app)
-
-            # Assert number of spans created
-            spans = self.get_spans()
-            self.assertEqual(len(spans), 0)

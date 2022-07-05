@@ -1,0 +1,230 @@
+[[
+  {
+    "name": "tests.contrib.flask.request_started",
+    "service": "flask",
+    "resource": "tests.contrib.flask.request_started",
+    "trace_id": 0,
+    "span_id": 1,
+    "parent_id": 0,
+    "meta": {
+      "_dd.p.dm": "-0",
+      "flask.signal": "request_started",
+      "runtime-id": "19ee918a758e4a7083d271f4fe90d385"
+    },
+    "metrics": {
+      "_dd.agent_psr": 1.0,
+      "_dd.top_level": 1,
+      "_dd.tracer_kr": 1.0,
+      "_sampling_priority_v1": 1,
+      "system.pid": 51659
+    },
+    "duration": 626000,
+    "start": 1657056851508032000
+  }],
+[
+  {
+    "name": "tests.contrib.flask.request_finished",
+    "service": "flask",
+    "resource": "tests.contrib.flask.request_finished",
+    "trace_id": 1,
+    "span_id": 1,
+    "parent_id": 0,
+    "meta": {
+      "_dd.p.dm": "-0",
+      "flask.signal": "request_finished",
+      "runtime-id": "19ee918a758e4a7083d271f4fe90d385"
+    },
+    "metrics": {
+      "_dd.agent_psr": 1.0,
+      "_dd.top_level": 1,
+      "_dd.tracer_kr": 1.0,
+      "_sampling_priority_v1": 1,
+      "system.pid": 51659
+    },
+    "duration": 269000,
+    "start": 1657056851510047000
+  }],
+[
+  {
+    "name": "tests.contrib.flask.request_tearing_down",
+    "service": "flask",
+    "resource": "tests.contrib.flask.request_tearing_down",
+    "trace_id": 2,
+    "span_id": 1,
+    "parent_id": 0,
+    "meta": {
+      "_dd.p.dm": "-0",
+      "flask.signal": "request_tearing_down",
+      "runtime-id": "19ee918a758e4a7083d271f4fe90d385"
+    },
+    "metrics": {
+      "_dd.agent_psr": 1.0,
+      "_dd.top_level": 1,
+      "_dd.tracer_kr": 1.0,
+      "_sampling_priority_v1": 1,
+      "system.pid": 51659
+    },
+    "duration": 294000,
+    "start": 1657056851511096000
+  }],
+[
+  {
+    "name": "tests.contrib.flask.template_rendered",
+    "service": "flask",
+    "resource": "tests.contrib.flask.template_rendered",
+    "trace_id": 3,
+    "span_id": 1,
+    "parent_id": 0,
+    "meta": {
+      "_dd.p.dm": "-0",
+      "flask.signal": "template_rendered",
+      "runtime-id": "19ee918a758e4a7083d271f4fe90d385"
+    },
+    "metrics": {
+      "_dd.agent_psr": 1.0,
+      "_dd.top_level": 1,
+      "_dd.tracer_kr": 1.0,
+      "_sampling_priority_v1": 1,
+      "system.pid": 51659
+    },
+    "duration": 420000,
+    "start": 1657056851512217000
+  }],
+[
+  {
+    "name": "tests.contrib.flask.got_request_exception",
+    "service": "flask",
+    "resource": "tests.contrib.flask.got_request_exception",
+    "trace_id": 4,
+    "span_id": 1,
+    "parent_id": 0,
+    "meta": {
+      "_dd.p.dm": "-0",
+      "flask.signal": "got_request_exception",
+      "runtime-id": "19ee918a758e4a7083d271f4fe90d385"
+    },
+    "metrics": {
+      "_dd.agent_psr": 1.0,
+      "_dd.top_level": 1,
+      "_dd.tracer_kr": 1.0,
+      "_sampling_priority_v1": 1,
+      "system.pid": 51659
+    },
+    "duration": 262000,
+    "start": 1657056851513224000
+  }],
+[
+  {
+    "name": "tests.contrib.flask.appcontext_tearing_down",
+    "service": "flask",
+    "resource": "tests.contrib.flask.appcontext_tearing_down",
+    "trace_id": 5,
+    "span_id": 1,
+    "parent_id": 0,
+    "meta": {
+      "_dd.p.dm": "-0",
+      "flask.signal": "appcontext_tearing_down",
+      "runtime-id": "19ee918a758e4a7083d271f4fe90d385"
+    },
+    "metrics": {
+      "_dd.agent_psr": 1.0,
+      "_dd.top_level": 1,
+      "_dd.tracer_kr": 1.0,
+      "_sampling_priority_v1": 1,
+      "system.pid": 51659
+    },
+    "duration": 263000,
+    "start": 1657056851513882000
+  }],
+[
+  {
+    "name": "tests.contrib.flask.before_render_template",
+    "service": "flask",
+    "resource": "tests.contrib.flask.before_render_template",
+    "trace_id": 6,
+    "span_id": 1,
+    "parent_id": 0,
+    "meta": {
+      "_dd.p.dm": "-0",
+      "flask.signal": "before_render_template",
+      "runtime-id": "19ee918a758e4a7083d271f4fe90d385"
+    },
+    "metrics": {
+      "_dd.agent_psr": 1.0,
+      "_dd.top_level": 1,
+      "_dd.tracer_kr": 1.0,
+      "_sampling_priority_v1": 1,
+      "system.pid": 51659
+    },
+    "duration": 177000,
+    "start": 1657056851514621000
+  }],
+[
+  {
+    "name": "tests.contrib.flask.appcontext_pushed",
+    "service": "flask",
+    "resource": "tests.contrib.flask.appcontext_pushed",
+    "trace_id": 7,
+    "span_id": 1,
+    "parent_id": 0,
+    "meta": {
+      "_dd.p.dm": "-0",
+      "flask.signal": "appcontext_pushed",
+      "runtime-id": "19ee918a758e4a7083d271f4fe90d385"
+    },
+    "metrics": {
+      "_dd.agent_psr": 1.0,
+      "_dd.top_level": 1,
+      "_dd.tracer_kr": 1.0,
+      "_sampling_priority_v1": 1,
+      "system.pid": 51659
+    },
+    "duration": 158000,
+    "start": 1657056851515178000
+  }],
+[
+  {
+    "name": "tests.contrib.flask.appcontext_popped",
+    "service": "flask",
+    "resource": "tests.contrib.flask.appcontext_popped",
+    "trace_id": 8,
+    "span_id": 1,
+    "parent_id": 0,
+    "meta": {
+      "_dd.p.dm": "-0",
+      "flask.signal": "appcontext_popped",
+      "runtime-id": "19ee918a758e4a7083d271f4fe90d385"
+    },
+    "metrics": {
+      "_dd.agent_psr": 1.0,
+      "_dd.top_level": 1,
+      "_dd.tracer_kr": 1.0,
+      "_sampling_priority_v1": 1,
+      "system.pid": 51659
+    },
+    "duration": 165000,
+    "start": 1657056851515693000
+  }],
+[
+  {
+    "name": "tests.contrib.flask.message_flashed",
+    "service": "flask",
+    "resource": "tests.contrib.flask.message_flashed",
+    "trace_id": 9,
+    "span_id": 1,
+    "parent_id": 0,
+    "meta": {
+      "_dd.p.dm": "-0",
+      "flask.signal": "message_flashed",
+      "runtime-id": "19ee918a758e4a7083d271f4fe90d385"
+    },
+    "metrics": {
+      "_dd.agent_psr": 1.0,
+      "_dd.top_level": 1,
+      "_dd.tracer_kr": 1.0,
+      "_sampling_priority_v1": 1,
+      "system.pid": 51659
+    },
+    "duration": 317000,
+    "start": 1657056851516296000
+  }]]

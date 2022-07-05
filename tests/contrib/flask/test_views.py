@@ -1,9 +1,9 @@
 from flask.views import MethodView
 from flask.views import View
 
-from ddtrace.ext import http
+from ddtrace.contrib.flask.patch import flask_version
 from ddtrace.internal.compat import PY2
-from tests.utils import assert_span_http_status_code
+from tests.utils import snapshot
 
 from . import BaseFlaskTestCase
 
@@ -14,6 +14,7 @@ if PY2:
 
 
 class FlaskViewTestCase(BaseFlaskTestCase):
+    @snapshot(ignores=["meta.flask.version"], variants={"1_0": flask_version < (1, 1), "": flask_version >= (1, 1)})
     def test_view_handler(self):
         """
         When using a flask.views.View
@@ -32,25 +33,10 @@ class FlaskViewTestCase(BaseFlaskTestCase):
         self.assertEqual(res.status_code, 200)
         self.assertEqual(res.data, b"Hello flask")
 
-        spans = self.get_spans()
-
-        req_span = self.find_span_by_name(spans, "flask.request")
-        handler_span = self.find_span_by_name(spans, "tests.contrib.flask.test_views.hello")
-
-        # flask.request
-        self.assertEqual(req_span.error, 0)
-        self.assertEqual(req_span.get_tag("flask.endpoint"), "hello")
-        self.assertEqual(req_span.get_tag("flask.url_rule"), "/hello/<name>")
-        self.assertEqual(req_span.get_tag("flask.view_args.name"), "flask")
-        self.assertEqual(req_span.get_tag("http.method"), "GET")
-        assert_span_http_status_code(req_span, 200)
-        self.assertEqual(req_span.get_tag(http.URL), "http://localhost/hello/flask")
-
-        # tests.contrib.flask.test_views.hello
-        # DEV: We do not add any additional metadata to view spans
-        self.assertEqual(handler_span.error, 0)
-        self.assertEqual(handler_span.get_tags(), dict())
-
+    @snapshot(
+        ignores=["meta.flask.version", "meta.error.stack"],
+        variants={"1_0": flask_version < (1, 1), "": flask_version >= (1, 1)},
+    )
     def test_view_handler_error(self):
         """
         When using a flask.views.View
@@ -69,34 +55,7 @@ class FlaskViewTestCase(BaseFlaskTestCase):
         res = self.client.get("/hello/flask")
         self.assertEqual(res.status_code, 500)
 
-        spans = self.get_spans()
-
-        req_span = self.find_span_by_name(spans, "flask.request")
-        dispatch_span = self.find_span_by_name(spans, "flask.dispatch_request")
-        handler_span = self.find_span_by_name(spans, "tests.contrib.flask.test_views.hello")
-
-        # flask.request
-        self.assertEqual(req_span.error, 1)
-        self.assertEqual(req_span.get_tag("flask.endpoint"), "hello")
-        self.assertEqual(req_span.get_tag("flask.url_rule"), "/hello/<name>")
-        self.assertEqual(req_span.get_tag("flask.view_args.name"), "flask")
-        self.assertEqual(req_span.get_tag("http.method"), "GET")
-        assert_span_http_status_code(req_span, 500)
-        self.assertEqual(req_span.get_tag(http.URL), "http://localhost/hello/flask")
-
-        # flask.dispatch_request
-        self.assertEqual(dispatch_span.error, 1)
-        self.assertEqual(dispatch_span.get_tag("error.msg"), "an error")
-        self.assertTrue(dispatch_span.get_tag("error.stack").startswith("Traceback (most recent call last):"))
-        self.assertEqual(dispatch_span.get_tag("error.type"), base_exception_name)
-
-        # tests.contrib.flask.test_views.hello
-        # DEV: We do not add any additional metadata to view spans
-        self.assertEqual(handler_span.error, 1)
-        self.assertEqual(handler_span.get_tag("error.msg"), "an error")
-        self.assertTrue(handler_span.get_tag("error.stack").startswith("Traceback (most recent call last):"))
-        self.assertEqual(handler_span.get_tag("error.type"), base_exception_name)
-
+    @snapshot(ignores=["meta.flask.version"], variants={"1_0": flask_version < (1, 1), "": flask_version >= (1, 1)})
     def test_method_view_handler(self):
         """
         When using a flask.views.MethodView
@@ -113,25 +72,10 @@ class FlaskViewTestCase(BaseFlaskTestCase):
         self.assertEqual(res.status_code, 200)
         self.assertEqual(res.data, b"Hello flask")
 
-        spans = self.get_spans()
-
-        req_span = self.find_span_by_name(spans, "flask.request")
-        handler_span = self.find_span_by_name(spans, "tests.contrib.flask.test_views.hello")
-
-        # flask.request
-        self.assertEqual(req_span.error, 0)
-        self.assertEqual(req_span.get_tag("flask.endpoint"), "hello")
-        self.assertEqual(req_span.get_tag("flask.url_rule"), "/hello/<name>")
-        self.assertEqual(req_span.get_tag("flask.view_args.name"), "flask")
-        self.assertEqual(req_span.get_tag("http.method"), "GET")
-        assert_span_http_status_code(req_span, 200)
-        self.assertEqual(req_span.get_tag(http.URL), "http://localhost/hello/flask")
-
-        # tests.contrib.flask.test_views.hello
-        # DEV: We do not add any additional metadata to view spans
-        self.assertEqual(handler_span.error, 0)
-        self.assertEqual(handler_span.get_tags(), dict())
-
+    @snapshot(
+        ignores=["meta.flask.version", "meta.error.stack"],
+        variants={"1_0": flask_version < (1, 1), "": flask_version >= (1, 1)},
+    )
     def test_method_view_handler_error(self):
         """
         When using a flask.views.View
@@ -147,31 +91,3 @@ class FlaskViewTestCase(BaseFlaskTestCase):
 
         res = self.client.get("/hello/flask")
         self.assertEqual(res.status_code, 500)
-
-        spans = self.get_spans()
-
-        req_span = self.find_span_by_name(spans, "flask.request")
-        dispatch_span = self.find_span_by_name(spans, "flask.dispatch_request")
-        handler_span = self.find_span_by_name(spans, "tests.contrib.flask.test_views.hello")
-
-        # flask.request
-        self.assertEqual(req_span.error, 1)
-        self.assertEqual(req_span.get_tag("flask.endpoint"), "hello")
-        self.assertEqual(req_span.get_tag("flask.url_rule"), "/hello/<name>")
-        self.assertEqual(req_span.get_tag("flask.view_args.name"), "flask")
-        self.assertEqual(req_span.get_tag("http.method"), "GET")
-        assert_span_http_status_code(req_span, 500)
-        self.assertEqual(req_span.get_tag(http.URL), "http://localhost/hello/flask")
-
-        # flask.dispatch_request
-        self.assertEqual(dispatch_span.error, 1)
-        self.assertEqual(dispatch_span.get_tag("error.msg"), "an error")
-        self.assertTrue(dispatch_span.get_tag("error.stack").startswith("Traceback (most recent call last):"))
-        self.assertEqual(dispatch_span.get_tag("error.type"), base_exception_name)
-
-        # tests.contrib.flask.test_views.hello
-        # DEV: We do not add any additional metadata to view spans
-        self.assertEqual(handler_span.error, 1)
-        self.assertEqual(handler_span.get_tag("error.msg"), "an error")
-        self.assertTrue(handler_span.get_tag("error.stack").startswith("Traceback (most recent call last):"))
-        self.assertEqual(handler_span.get_tag("error.type"), base_exception_name)

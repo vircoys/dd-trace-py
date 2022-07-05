@@ -1,0 +1,132 @@
+[[
+  {
+    "name": "flask.request",
+    "service": "flask",
+    "resource": "GET /error",
+    "trace_id": 0,
+    "span_id": 1,
+    "parent_id": 0,
+    "type": "web",
+    "meta": {
+      "_dd.p.dm": "-0",
+      "flask.endpoint": "endpoint_error",
+      "flask.url_rule": "/error",
+      "flask.version": "0.12.5",
+      "http.method": "GET",
+      "http.status_code": "200",
+      "http.url": "http://localhost/error",
+      "runtime-id": "4d7f526a178146eaacd40c2d536aacaa"
+    },
+    "metrics": {
+      "_dd.agent_psr": 1.0,
+      "_dd.measured": 1,
+      "_dd.top_level": 1,
+      "_dd.tracer_kr": 1.0,
+      "_sampling_priority_v1": 1,
+      "system.pid": 36411
+    },
+    "duration": 1169000,
+    "start": 1657053444158804000
+  },
+     {
+       "name": "flask.try_trigger_before_first_request_functions",
+       "service": "flask",
+       "resource": "flask.try_trigger_before_first_request_functions",
+       "trace_id": 0,
+       "span_id": 2,
+       "parent_id": 1,
+       "duration": 21000,
+       "start": 1657053444159181000
+     },
+     {
+       "name": "flask.preprocess_request",
+       "service": "flask",
+       "resource": "flask.preprocess_request",
+       "trace_id": 0,
+       "span_id": 3,
+       "parent_id": 1,
+       "duration": 19000,
+       "start": 1657053444159258000
+     },
+     {
+       "name": "flask.dispatch_request",
+       "service": "flask",
+       "resource": "flask.dispatch_request",
+       "trace_id": 0,
+       "span_id": 4,
+       "parent_id": 1,
+       "error": 1,
+       "meta": {
+         "error.msg": "custom error message",
+         "error.stack": "Traceback (most recent call last):\n  File \"/Users/munir.abdinur/Documents/ApmPython/dd-trace-py/ddtrace/contrib/flask/patch.py\", line 481, in _traced_request\n    return wrapped(*args, **kwargs)\n  File \"/Users/munir.abdinur/Documents/ApmPython/dd-trace-py/.riot/venv_py3615_flask~0120_pytest~30_more_itertools8110_itsdangerous20_markupsafe20/lib/python3.6/site-packages/flask/app.py\", line 1598, in dispatch_request\n    return self.view_functions[rule.endpoint](**req.view_args)\n  File \"/Users/munir.abdinur/Documents/ApmPython/dd-trace-py/ddtrace/contrib/flask/wrappers.py\", line 25, in trace_func\n    return wrapped(*args, **kwargs)\n  File \"/Users/munir.abdinur/Documents/ApmPython/dd-trace-py/tests/contrib/flask/test_errorhandler.py\", line 99, in endpoint_error\n    raise FlaskTestException(\"custom error message\")\ntests.contrib.flask.test_errorhandler.FlaskErrorhandlerTestCase.test_raise_user_exception_handler.<locals>.FlaskTestException: custom error message\n",
+         "error.type": "tests.contrib.flask.test_errorhandler.FlaskTestException"
+       },
+       "duration": 319000,
+       "start": 1657053444159308000
+     },
+        {
+          "name": "tests.contrib.flask.test_errorhandler.endpoint_error",
+          "service": "flask",
+          "resource": "/error",
+          "trace_id": 0,
+          "span_id": 9,
+          "parent_id": 4,
+          "error": 1,
+          "meta": {
+            "error.msg": "custom error message",
+            "error.stack": "Traceback (most recent call last):\n  File \"/Users/munir.abdinur/Documents/ApmPython/dd-trace-py/ddtrace/contrib/flask/wrappers.py\", line 25, in trace_func\n    return wrapped(*args, **kwargs)\n  File \"/Users/munir.abdinur/Documents/ApmPython/dd-trace-py/tests/contrib/flask/test_errorhandler.py\", line 99, in endpoint_error\n    raise FlaskTestException(\"custom error message\")\ntests.contrib.flask.test_errorhandler.FlaskErrorhandlerTestCase.test_raise_user_exception_handler.<locals>.FlaskTestException: custom error message\n",
+            "error.type": "tests.contrib.flask.test_errorhandler.FlaskTestException"
+          },
+          "duration": 180000,
+          "start": 1657053444159338000
+        },
+     {
+       "name": "flask.handle_user_exception",
+       "service": "flask",
+       "resource": "flask.handle_user_exception",
+       "trace_id": 0,
+       "span_id": 5,
+       "parent_id": 1,
+       "duration": 66000,
+       "start": 1657053444159667000
+     },
+        {
+          "name": "tests.contrib.flask.test_errorhandler.handle_error",
+          "service": "flask",
+          "resource": "tests.contrib.flask.test_errorhandler.handle_error",
+          "trace_id": 0,
+          "span_id": 10,
+          "parent_id": 5,
+          "duration": 10000,
+          "start": 1657053444159713000
+        },
+     {
+       "name": "flask.process_response",
+       "service": "flask",
+       "resource": "flask.process_response",
+       "trace_id": 0,
+       "span_id": 6,
+       "parent_id": 1,
+       "duration": 15000,
+       "start": 1657053444159793000
+     },
+     {
+       "name": "flask.do_teardown_request",
+       "service": "flask",
+       "resource": "flask.do_teardown_request",
+       "trace_id": 0,
+       "span_id": 7,
+       "parent_id": 1,
+       "duration": 16000,
+       "start": 1657053444159893000
+     },
+     {
+       "name": "flask.do_teardown_appcontext",
+       "service": "flask",
+       "resource": "flask.do_teardown_appcontext",
+       "trace_id": 0,
+       "span_id": 8,
+       "parent_id": 1,
+       "duration": 11000,
+       "start": 1657053444159947000
+     }]]

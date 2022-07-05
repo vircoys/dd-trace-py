@@ -1,0 +1,130 @@
+[[
+  {
+    "name": "flask.request",
+    "service": "flask",
+    "resource": "GET /hello/<name>",
+    "trace_id": 0,
+    "span_id": 1,
+    "parent_id": 0,
+    "type": "web",
+    "error": 1,
+    "meta": {
+      "_dd.p.dm": "-0",
+      "flask.endpoint": "hello",
+      "flask.url_rule": "/hello/<name>",
+      "flask.version": "0.12.5",
+      "flask.view_args.name": "flask",
+      "http.method": "GET",
+      "http.status_code": "500",
+      "http.url": "http://localhost/hello/flask",
+      "runtime-id": "9cad885b9f2a4126947c5a523dba2454"
+    },
+    "metrics": {
+      "_dd.agent_psr": 1.0,
+      "_dd.measured": 1,
+      "_dd.top_level": 1,
+      "_dd.tracer_kr": 1.0,
+      "_sampling_priority_v1": 1,
+      "system.pid": 51030
+    },
+    "duration": 7753000,
+    "start": 1657056657281079000
+  },
+     {
+       "name": "flask.try_trigger_before_first_request_functions",
+       "service": "flask",
+       "resource": "flask.try_trigger_before_first_request_functions",
+       "trace_id": 0,
+       "span_id": 2,
+       "parent_id": 1,
+       "duration": 25000,
+       "start": 1657056657281621000
+     },
+     {
+       "name": "flask.preprocess_request",
+       "service": "flask",
+       "resource": "flask.preprocess_request",
+       "trace_id": 0,
+       "span_id": 3,
+       "parent_id": 1,
+       "duration": 21000,
+       "start": 1657056657281715000
+     },
+     {
+       "name": "flask.dispatch_request",
+       "service": "flask",
+       "resource": "flask.dispatch_request",
+       "trace_id": 0,
+       "span_id": 4,
+       "parent_id": 1,
+       "error": 1,
+       "meta": {
+         "error.msg": "an error",
+         "error.stack": "Traceback (most recent call last):\n  File \"/Users/munir.abdinur/Documents/ApmPython/dd-trace-py/ddtrace/contrib/flask/patch.py\", line 481, in _traced_request\n    return wrapped(*args, **kwargs)\n  File \"/Users/munir.abdinur/Documents/ApmPython/dd-trace-py/.riot/venv_py3615_flask~0120_pytest~30_more_itertools8110_itsdangerous20_markupsafe20/lib/python3.6/site-packages/flask/app.py\", line 1598, in dispatch_request\n    return self.view_functions[rule.endpoint](**req.view_args)\n  File \"/Users/munir.abdinur/Documents/ApmPython/dd-trace-py/ddtrace/contrib/flask/wrappers.py\", line 25, in trace_func\n    return wrapped(*args, **kwargs)\n  File \"/Users/munir.abdinur/Documents/ApmPython/dd-trace-py/.riot/venv_py3615_flask~0120_pytest~30_more_itertools8110_itsdangerous20_markupsafe20/lib/python3.6/site-packages/flask/views.py\", line 84, in view\n    return self.dispatch_request(*args, **kwargs)\n  File \"/Users/munir.abdinur/Documents/ApmPython/dd-trace-py/.riot/venv_py3615_flask~0120_pytest~30_more_itertools8110_itsdangerous20_markupsafe20/lib/python3.6/site-packages/flask/views.py\", line 149, in dispatch_request\n    return meth(*args, **kwargs)\n  File \"/Users/munir.abdinur/Documents/ApmPython/dd-trace-py/tests/contrib/flask/test_views.py\", line 95, in get\n    raise Exception(\"an error\")\nException: an error\n",
+         "error.type": "builtins.Exception"
+       },
+       "duration": 3062000,
+       "start": 1657056657281774000
+     },
+        {
+          "name": "tests.contrib.flask.test_views.hello",
+          "service": "flask",
+          "resource": "/hello/<name>",
+          "trace_id": 0,
+          "span_id": 9,
+          "parent_id": 4,
+          "error": 1,
+          "meta": {
+            "error.msg": "an error",
+            "error.stack": "Traceback (most recent call last):\n  File \"/Users/munir.abdinur/Documents/ApmPython/dd-trace-py/ddtrace/contrib/flask/wrappers.py\", line 25, in trace_func\n    return wrapped(*args, **kwargs)\n  File \"/Users/munir.abdinur/Documents/ApmPython/dd-trace-py/.riot/venv_py3615_flask~0120_pytest~30_more_itertools8110_itsdangerous20_markupsafe20/lib/python3.6/site-packages/flask/views.py\", line 84, in view\n    return self.dispatch_request(*args, **kwargs)\n  File \"/Users/munir.abdinur/Documents/ApmPython/dd-trace-py/.riot/venv_py3615_flask~0120_pytest~30_more_itertools8110_itsdangerous20_markupsafe20/lib/python3.6/site-packages/flask/views.py\", line 149, in dispatch_request\n    return meth(*args, **kwargs)\n  File \"/Users/munir.abdinur/Documents/ApmPython/dd-trace-py/tests/contrib/flask/test_views.py\", line 95, in get\n    raise Exception(\"an error\")\nException: an error\n",
+            "error.type": "builtins.Exception"
+          },
+          "duration": 2037000,
+          "start": 1657056657281808000
+        },
+     {
+       "name": "flask.handle_user_exception",
+       "service": "flask",
+       "resource": "flask.handle_user_exception",
+       "trace_id": 0,
+       "span_id": 5,
+       "parent_id": 1,
+       "error": 1,
+       "meta": {
+         "error.msg": "an error",
+         "error.stack": "Traceback (most recent call last):\n  File \"/Users/munir.abdinur/Documents/ApmPython/dd-trace-py/ddtrace/contrib/flask/helpers.py\", line 36, in wrapper\n    return wrapped(*args, **kwargs)\n  File \"/Users/munir.abdinur/Documents/ApmPython/dd-trace-py/.riot/venv_py3615_flask~0120_pytest~30_more_itertools8110_itsdangerous20_markupsafe20/lib/python3.6/site-packages/flask/app.py\", line 1517, in handle_user_exception\n    reraise(exc_type, exc_value, tb)\n  File \"/Users/munir.abdinur/Documents/ApmPython/dd-trace-py/.riot/venv_py3615_flask~0120_pytest~30_more_itertools8110_itsdangerous20_markupsafe20/lib/python3.6/site-packages/flask/_compat.py\", line 33, in reraise\n    raise value\n  File \"/Users/munir.abdinur/Documents/ApmPython/dd-trace-py/.riot/venv_py3615_flask~0120_pytest~30_more_itertools8110_itsdangerous20_markupsafe20/lib/python3.6/site-packages/flask/app.py\", line 1612, in full_dispatch_request\n    rv = self.dispatch_request()\n  File \"/Users/munir.abdinur/Documents/ApmPython/dd-trace-py/ddtrace/contrib/flask/helpers.py\", line 25, in wrapper\n    return func(pin, wrapped, instance, args, kwargs)\n  File \"/Users/munir.abdinur/Documents/ApmPython/dd-trace-py/ddtrace/contrib/flask/patch.py\", line 481, in _traced_request\n    return wrapped(*args, **kwargs)\n  File \"/Users/munir.abdinur/Documents/ApmPython/dd-trace-py/.riot/venv_py3615_flask~0120_pytest~30_more_itertools8110_itsdangerous20_markupsafe20/lib/python3.6/site-packages/flask/app.py\", line 1598, in dispatch_request\n    return self.view_functions[rule.endpoint](**req.view_args)\n  File \"/Users/munir.abdinur/Documents/ApmPython/dd-trace-py/ddtrace/contrib/flask/wrappers.py\", line 25, in trace_func\n    return wrapped(*args, **kwargs)\n  File \"/Users/munir.abdinur/Documents/ApmPython/dd-trace-py/.riot/venv_py3615_flask~0120_pytest~30_more_itertools8110_itsdangerous20_markupsafe20/lib/python3.6/site-packages/flask/views.py\", line 84, in view\n    return self.dispatch_request(*args, **kwargs)\n  File \"/Users/munir.abdinur/Documents/ApmPython/dd-trace-py/.riot/venv_py3615_flask~0120_pytest~30_more_itertools8110_itsdangerous20_markupsafe20/lib/python3.6/site-packages/flask/views.py\", line 149, in dispatch_request\n    return meth(*args, **kwargs)\n  File \"/Users/munir.abdinur/Documents/ApmPython/dd-trace-py/tests/contrib/flask/test_views.py\", line 95, in get\n    raise Exception(\"an error\")\nException: an error\n",
+         "error.type": "builtins.Exception"
+       },
+       "duration": 773000,
+       "start": 1657056657284938000
+     },
+     {
+       "name": "flask.handle_exception",
+       "service": "flask",
+       "resource": "flask.handle_exception",
+       "trace_id": 0,
+       "span_id": 6,
+       "parent_id": 1,
+       "duration": 2692000,
+       "start": 1657056657285813000
+     },
+     {
+       "name": "flask.do_teardown_request",
+       "service": "flask",
+       "resource": "flask.do_teardown_request",
+       "trace_id": 0,
+       "span_id": 7,
+       "parent_id": 1,
+       "duration": 25000,
+       "start": 1657056657288737000
+     },
+     {
+       "name": "flask.do_teardown_appcontext",
+       "service": "flask",
+       "resource": "flask.do_teardown_appcontext",
+       "trace_id": 0,
+       "span_id": 8,
+       "parent_id": 1,
+       "duration": 13000,
+       "start": 1657056657288805000
+     }]]

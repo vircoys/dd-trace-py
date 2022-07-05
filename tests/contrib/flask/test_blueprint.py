@@ -41,12 +41,12 @@ class FlaskBlueprintTestCase(BaseFlaskTestCase):
         # DEV: This is more common than calling ``flask.Blueprint.register`` directly
         self.app.register_blueprint(bp)
         pin = Pin.get_from(bp)
-        self.assertEqual(pin.service, "flask-bp")
+        assert pin.service == "flask-bp"
 
         bp = flask.Blueprint("not-pinned", __name__)
         self.app.register_blueprint(bp)
         pin = Pin.get_from(bp)
-        self.assertNotEqual(pin.service, "flask-bp")
+        assert pin.service != "flask-bp"
 
     def test_blueprint_add_url_rule(self):
         """
@@ -66,8 +66,8 @@ class FlaskBlueprintTestCase(BaseFlaskTestCase):
 
         # Assert the view func has a `Pin` attached with the Blueprint's service name
         pin = Pin.get_from(test_view)
-        self.assertIsNotNone(pin)
-        self.assertEqual(pin.service, "flask-bp")
+        assert pin is not None
+        assert pin.service == "flask-bp"
 
         # When the Blueprint does not have a Pin attached
         bp = flask.Blueprint("not-pinned", __name__)
@@ -78,7 +78,7 @@ class FlaskBlueprintTestCase(BaseFlaskTestCase):
 
         # Assert the view does not have a `Pin` attached
         pin = Pin.get_from(test_view)
-        self.assertIsNone(pin)
+        assert pin is None
 
     def test_blueprint_request(self):
         """
@@ -95,15 +95,6 @@ class FlaskBlueprintTestCase(BaseFlaskTestCase):
 
         # Request the endpoint
         self.client.get("/")
-
-        # Only extract the span we care about
-        # DEV: Making a request creates a bunch of lifecycle spans,
-        #   ignore them, we test them elsewhere
-        span = self.find_span_by_name(self.get_spans(), "bp.test")
-        self.assertEqual(span.service, "flask")
-        self.assertEqual(span.name, "bp.test")
-        self.assertEqual(span.resource, "/")
-        self.assertEqual(span.get_tags(), dict())
 
     def test_blueprint_request_pin_override(self):
         """
@@ -122,15 +113,6 @@ class FlaskBlueprintTestCase(BaseFlaskTestCase):
 
         # Request the endpoint
         self.client.get("/")
-
-        # Only extract the span we care about
-        # DEV: Making a request creates a bunch of lifecycle spans,
-        #   ignore them, we test them elsewhere
-        span = self.find_span_by_name(self.get_spans(), "bp.test")
-        self.assertEqual(span.service, "flask-bp")
-        self.assertEqual(span.name, "bp.test")
-        self.assertEqual(span.resource, "/")
-        self.assertEqual(span.get_tags(), dict())
 
     def test_blueprint_request_pin_disabled(self):
         """
@@ -151,5 +133,3 @@ class FlaskBlueprintTestCase(BaseFlaskTestCase):
 
         # Request the endpoint
         self.client.get("/")
-
-        self.assertEqual(len(self.get_spans()), 0)

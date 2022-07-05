@@ -1,0 +1,127 @@
+[[
+  {
+    "name": "flask.request",
+    "service": "flask",
+    "resource": "GET /not-found",
+    "trace_id": 0,
+    "span_id": 1,
+    "parent_id": 0,
+    "type": "web",
+    "meta": {
+      "_dd.p.dm": "-0",
+      "flask.endpoint": "not_found",
+      "flask.url_rule": "/not-found",
+      "flask.version": "0.12.5",
+      "http.method": "GET",
+      "http.request.headers.host": "localhost",
+      "http.status_code": "404",
+      "http.url": "http://localhost/not-found",
+      "runtime-id": "8ef31ac30c62435693024745f1c5957b"
+    },
+    "metrics": {
+      "_dd.agent_psr": 1.0,
+      "_dd.measured": 1,
+      "_dd.top_level": 1,
+      "_dd.tracer_kr": 1.0,
+      "_sampling_priority_v1": 1,
+      "system.pid": 45788
+    },
+    "duration": 1349000,
+    "start": 1657055458113418000
+  },
+     {
+       "name": "flask.try_trigger_before_first_request_functions",
+       "service": "flask",
+       "resource": "flask.try_trigger_before_first_request_functions",
+       "trace_id": 0,
+       "span_id": 2,
+       "parent_id": 1,
+       "duration": 21000,
+       "start": 1657055458113961000
+     },
+     {
+       "name": "flask.preprocess_request",
+       "service": "flask",
+       "resource": "flask.preprocess_request",
+       "trace_id": 0,
+       "span_id": 3,
+       "parent_id": 1,
+       "duration": 16000,
+       "start": 1657055458114042000
+     },
+     {
+       "name": "flask.dispatch_request",
+       "service": "flask",
+       "resource": "flask.dispatch_request",
+       "trace_id": 0,
+       "span_id": 4,
+       "parent_id": 1,
+       "duration": 249000,
+       "start": 1657055458114094000
+     },
+        {
+          "name": "tests.contrib.flask.test_request.not_found",
+          "service": "flask",
+          "resource": "/not-found",
+          "trace_id": 0,
+          "span_id": 9,
+          "parent_id": 4,
+          "error": 1,
+          "meta": {
+            "error.msg": "404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.",
+            "error.stack": "Traceback (most recent call last):\n  File \"/Users/munir.abdinur/Documents/ApmPython/dd-trace-py/ddtrace/contrib/flask/wrappers.py\", line 25, in trace_func\n    return wrapped(*args, **kwargs)\n  File \"/Users/munir.abdinur/Documents/ApmPython/dd-trace-py/tests/contrib/flask/test_request.py\", line 267, in not_found\n    abort(404)\n  File \"/Users/munir.abdinur/Documents/ApmPython/dd-trace-py/.riot/venv_py3615_flask~0120_pytest~30_more_itertools8110_itsdangerous20_markupsafe20/lib/python3.6/site-packages/werkzeug/exceptions.py\", line 772, in abort\n    return _aborter(status, *args, **kwargs)\n  File \"/Users/munir.abdinur/Documents/ApmPython/dd-trace-py/.riot/venv_py3615_flask~0120_pytest~30_more_itertools8110_itsdangerous20_markupsafe20/lib/python3.6/site-packages/werkzeug/exceptions.py\", line 753, in __call__\n    raise self.mapping[code](*args, **kwargs)\nwerkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.\n",
+            "error.type": "werkzeug.exceptions.NotFound"
+          },
+          "duration": 197000,
+          "start": 1657055458114124000
+        },
+     {
+       "name": "flask.handle_user_exception",
+       "service": "flask",
+       "resource": "flask.handle_user_exception",
+       "trace_id": 0,
+       "span_id": 5,
+       "parent_id": 1,
+       "duration": 69000,
+       "start": 1657055458114378000
+     },
+        {
+          "name": "flask.handle_http_exception",
+          "service": "flask",
+          "resource": "flask.handle_http_exception",
+          "trace_id": 0,
+          "span_id": 10,
+          "parent_id": 5,
+          "duration": 23000,
+          "start": 1657055458114413000
+        },
+     {
+       "name": "flask.process_response",
+       "service": "flask",
+       "resource": "flask.process_response",
+       "trace_id": 0,
+       "span_id": 6,
+       "parent_id": 1,
+       "duration": 17000,
+       "start": 1657055458114565000
+     },
+     {
+       "name": "flask.do_teardown_request",
+       "service": "flask",
+       "resource": "flask.do_teardown_request",
+       "trace_id": 0,
+       "span_id": 7,
+       "parent_id": 1,
+       "duration": 21000,
+       "start": 1657055458114673000
+     },
+     {
+       "name": "flask.do_teardown_appcontext",
+       "service": "flask",
+       "resource": "flask.do_teardown_appcontext",
+       "trace_id": 0,
+       "span_id": 8,
+       "parent_id": 1,
+       "duration": 17000,
+       "start": 1657055458114736000
+     }]]

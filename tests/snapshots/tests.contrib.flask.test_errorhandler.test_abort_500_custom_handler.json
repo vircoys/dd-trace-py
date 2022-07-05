@@ -1,0 +1,142 @@
+[[
+  {
+    "name": "flask.request",
+    "service": "flask",
+    "resource": "GET /500",
+    "trace_id": 0,
+    "span_id": 1,
+    "parent_id": 0,
+    "type": "web",
+    "meta": {
+      "_dd.p.dm": "-0",
+      "flask.endpoint": "endpoint_500",
+      "flask.url_rule": "/500",
+      "flask.version": "0.12.5",
+      "http.method": "GET",
+      "http.status_code": "200",
+      "http.url": "http://localhost/500",
+      "runtime-id": "fe85eeb145164f03924b25a7fb384693"
+    },
+    "metrics": {
+      "_dd.agent_psr": 1.0,
+      "_dd.measured": 1,
+      "_dd.top_level": 1,
+      "_dd.tracer_kr": 1.0,
+      "_sampling_priority_v1": 1,
+      "system.pid": 35442
+    },
+    "duration": 1777000,
+    "start": 1657053084019219000
+  },
+     {
+       "name": "flask.try_trigger_before_first_request_functions",
+       "service": "flask",
+       "resource": "flask.try_trigger_before_first_request_functions",
+       "trace_id": 0,
+       "span_id": 2,
+       "parent_id": 1,
+       "duration": 241000,
+       "start": 1657053084019651000
+     },
+     {
+       "name": "flask.preprocess_request",
+       "service": "flask",
+       "resource": "flask.preprocess_request",
+       "trace_id": 0,
+       "span_id": 3,
+       "parent_id": 1,
+       "duration": 20000,
+       "start": 1657053084019962000
+     },
+     {
+       "name": "flask.dispatch_request",
+       "service": "flask",
+       "resource": "flask.dispatch_request",
+       "trace_id": 0,
+       "span_id": 4,
+       "parent_id": 1,
+       "error": 1,
+       "meta": {
+         "error.msg": "500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application.",
+         "error.stack": "Traceback (most recent call last):\n  File \"/Users/munir.abdinur/Documents/ApmPython/dd-trace-py/ddtrace/contrib/flask/patch.py\", line 481, in _traced_request\n    return wrapped(*args, **kwargs)\n  File \"/Users/munir.abdinur/Documents/ApmPython/dd-trace-py/.riot/venv_py3615_flask~0120_pytest~30_more_itertools8110_itsdangerous20_markupsafe20/lib/python3.6/site-packages/flask/app.py\", line 1598, in dispatch_request\n    return self.view_functions[rule.endpoint](**req.view_args)\n  File \"/Users/munir.abdinur/Documents/ApmPython/dd-trace-py/ddtrace/contrib/flask/wrappers.py\", line 25, in trace_func\n    return wrapped(*args, **kwargs)\n  File \"/Users/munir.abdinur/Documents/ApmPython/dd-trace-py/tests/contrib/flask/test_errorhandler.py\", line 51, in endpoint_500\n    flask.abort(500)\n  File \"/Users/munir.abdinur/Documents/ApmPython/dd-trace-py/.riot/venv_py3615_flask~0120_pytest~30_more_itertools8110_itsdangerous20_markupsafe20/lib/python3.6/site-packages/werkzeug/exceptions.py\", line 772, in abort\n    return _aborter(status, *args, **kwargs)\n  File \"/Users/munir.abdinur/Documents/ApmPython/dd-trace-py/.riot/venv_py3615_flask~0120_pytest~30_more_itertools8110_itsdangerous20_markupsafe20/lib/python3.6/site-packages/werkzeug/exceptions.py\", line 753, in __call__\n    raise self.mapping[code](*args, **kwargs)\nwerkzeug.exceptions.InternalServerError: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application.\n",
+         "error.type": "werkzeug.exceptions.InternalServerError"
+       },
+       "duration": 376000,
+       "start": 1657053084020013000
+     },
+        {
+          "name": "tests.contrib.flask.test_errorhandler.endpoint_500",
+          "service": "flask",
+          "resource": "/500",
+          "trace_id": 0,
+          "span_id": 9,
+          "parent_id": 4,
+          "error": 1,
+          "meta": {
+            "error.msg": "500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application.",
+            "error.stack": "Traceback (most recent call last):\n  File \"/Users/munir.abdinur/Documents/ApmPython/dd-trace-py/ddtrace/contrib/flask/wrappers.py\", line 25, in trace_func\n    return wrapped(*args, **kwargs)\n  File \"/Users/munir.abdinur/Documents/ApmPython/dd-trace-py/tests/contrib/flask/test_errorhandler.py\", line 51, in endpoint_500\n    flask.abort(500)\n  File \"/Users/munir.abdinur/Documents/ApmPython/dd-trace-py/.riot/venv_py3615_flask~0120_pytest~30_more_itertools8110_itsdangerous20_markupsafe20/lib/python3.6/site-packages/werkzeug/exceptions.py\", line 772, in abort\n    return _aborter(status, *args, **kwargs)\n  File \"/Users/munir.abdinur/Documents/ApmPython/dd-trace-py/.riot/venv_py3615_flask~0120_pytest~30_more_itertools8110_itsdangerous20_markupsafe20/lib/python3.6/site-packages/werkzeug/exceptions.py\", line 753, in __call__\n    raise self.mapping[code](*args, **kwargs)\nwerkzeug.exceptions.InternalServerError: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application.\n",
+            "error.type": "werkzeug.exceptions.InternalServerError"
+          },
+          "duration": 189000,
+          "start": 1657053084020049000
+        },
+     {
+       "name": "flask.handle_user_exception",
+       "service": "flask",
+       "resource": "flask.handle_user_exception",
+       "trace_id": 0,
+       "span_id": 5,
+       "parent_id": 1,
+       "duration": 104000,
+       "start": 1657053084020433000
+     },
+        {
+          "name": "flask.handle_http_exception",
+          "service": "flask",
+          "resource": "flask.handle_http_exception",
+          "trace_id": 0,
+          "span_id": 10,
+          "parent_id": 5,
+          "duration": 63000,
+          "start": 1657053084020465000
+        },
+           {
+             "name": "tests.contrib.flask.test_errorhandler.handle_500",
+             "service": "flask",
+             "resource": "tests.contrib.flask.test_errorhandler.handle_500",
+             "trace_id": 0,
+             "span_id": 11,
+             "parent_id": 10,
+             "duration": 11000,
+             "start": 1657053084020506000
+           },
+     {
+       "name": "flask.process_response",
+       "service": "flask",
+       "resource": "flask.process_response",
+       "trace_id": 0,
+       "span_id": 6,
+       "parent_id": 1,
+       "duration": 25000,
+       "start": 1657053084020598000
+     },
+     {
+       "name": "flask.do_teardown_request",
+       "service": "flask",
+       "resource": "flask.do_teardown_request",
+       "trace_id": 0,
+       "span_id": 7,
+       "parent_id": 1,
+       "duration": 40000,
+       "start": 1657053084020848000
+     },
+     {
+       "name": "flask.do_teardown_appcontext",
+       "service": "flask",
+       "resource": "flask.do_teardown_appcontext",
+       "trace_id": 0,
+       "span_id": 8,
+       "parent_id": 1,
+       "duration": 25000,
+       "start": 1657053084020951000
+     }]]

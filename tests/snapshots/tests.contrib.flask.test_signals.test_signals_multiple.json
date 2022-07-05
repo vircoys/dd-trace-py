@@ -1,0 +1,46 @@
+[[
+  {
+    "name": "tests.contrib.flask.request_started_a",
+    "service": "flask",
+    "resource": "tests.contrib.flask.request_started_a",
+    "trace_id": 0,
+    "span_id": 1,
+    "parent_id": 0,
+    "meta": {
+      "_dd.p.dm": "-0",
+      "flask.signal": "request_started",
+      "runtime-id": "19ee918a758e4a7083d271f4fe90d385"
+    },
+    "metrics": {
+      "_dd.agent_psr": 1.0,
+      "_dd.top_level": 1,
+      "_dd.tracer_kr": 1.0,
+      "_sampling_priority_v1": 1,
+      "system.pid": 51659
+    },
+    "duration": 242000,
+    "start": 1657056851556325000
+  }],
+[
+  {
+    "name": "tests.contrib.flask.request_started_b",
+    "service": "flask",
+    "resource": "tests.contrib.flask.request_started_b",
+    "trace_id": 1,
+    "span_id": 1,
+    "parent_id": 0,
+    "meta": {
+      "_dd.p.dm": "-0",
+      "flask.signal": "request_started",
+      "runtime-id": "19ee918a758e4a7083d271f4fe90d385"
+    },
+    "metrics": {
+      "_dd.agent_psr": 1.0,
+      "_dd.top_level": 1,
+      "_dd.tracer_kr": 1.0,
+      "_sampling_priority_v1": 1,
+      "system.pid": 51659
+    },
+    "duration": 664000,
+    "start": 1657056851556968000
+  }]]

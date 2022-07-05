@@ -6,6 +6,7 @@ from ddtrace import Pin
 from ddtrace.contrib.flask import unpatch
 from ddtrace.contrib.flask.patch import flask_version
 from ddtrace.internal.compat import StringIO
+from tests.utils import snapshot
 
 from . import BaseFlaskTestCase
 
@@ -31,6 +32,7 @@ class FlaskHelpersTestCase(BaseFlaskTestCase):
         self.assert_is_not_wrapped(flask.jsonify)
         self.assert_is_not_wrapped(flask.send_file)
 
+    @snapshot(ignores=["meta.flask.version"])
     def test_jsonify(self):
         """
         When we call a patched ``flask.jsonify``
@@ -40,23 +42,10 @@ class FlaskHelpersTestCase(BaseFlaskTestCase):
         with self.app.app_context():
             with self.app.test_request_context("/"):
                 response = flask.jsonify(dict(key="value"))
-                self.assertTrue(isinstance(response, flask.Response))
-                self.assertEqual(response.status_code, 200)
+                assert isinstance(response, flask.Response)
+                assert response.status_code == 200
 
-        # 1 span for `jsonify`
-        # 1 span for tearing down the app context we created
-        # 1 span for tearing down the request context we created
-        spans = self.get_spans()
-        self.assertEqual(len(spans), 3)
-
-        self.assertIsNone(spans[0].service)
-        self.assertEqual(spans[0].name, "flask.jsonify")
-        self.assertEqual(spans[0].resource, "flask.jsonify")
-        assert set(spans[0].get_tags().keys()) == {"runtime-id", "_dd.p.dm"}
-
-        self.assertEqual(spans[1].name, "flask.do_teardown_request")
-        self.assertEqual(spans[2].name, "flask.do_teardown_appcontext")
-
+    @snapshot(ignores=["meta.flask.version"])
     def test_jsonify_pin_disabled(self):
         """
         When we call a patched ``flask.jsonify``
@@ -71,11 +60,10 @@ class FlaskHelpersTestCase(BaseFlaskTestCase):
         with self.app.app_context():
             with self.app.test_request_context("/"):
                 response = flask.jsonify(dict(key="value"))
-                self.assertTrue(isinstance(response, flask.Response))
-                self.assertEqual(response.status_code, 200)
+                assert isinstance(response, flask.Response)
+                assert response.status_code == 200
 
-        self.assertEqual(len(self.get_spans()), 0)
-
+    @snapshot(ignores=["meta.flask.version"])
     def test_send_file(self):
         """
         When calling a patched ``flask.send_file``
@@ -90,23 +78,10 @@ class FlaskHelpersTestCase(BaseFlaskTestCase):
             with self.app.test_request_context("/"):
                 # DEV: Flask >= (0, 12, 0) tries to infer mimetype, so set explicitly
                 response = flask.send_file(fp, mimetype="text/plain")
-                self.assertTrue(isinstance(response, flask.Response))
-                self.assertEqual(response.status_code, 200)
+                assert isinstance(response, flask.Response)
+                assert response.status_code == 200
 
-        # 1 for `send_file`
-        # 1 for tearing down the request context we created
-        # 1 for tearing down the app context we created
-        spans = self.get_spans()
-        self.assertEqual(len(spans), 3)
-
-        self.assertEqual(spans[0].service, "flask")
-        self.assertEqual(spans[0].name, "flask.send_file")
-        self.assertEqual(spans[0].resource, "flask.send_file")
-        assert set(spans[0].get_tags().keys()) == {"runtime-id", "_dd.p.dm"}
-
-        self.assertEqual(spans[1].name, "flask.do_teardown_request")
-        self.assertEqual(spans[2].name, "flask.do_teardown_appcontext")
-
+    @snapshot(ignores=["meta.flask.version"])
     def test_send_file_pin_disabled(self):
         """
         When calling a patched ``flask.send_file``
@@ -125,7 +100,5 @@ class FlaskHelpersTestCase(BaseFlaskTestCase):
             with self.app.test_request_context("/"):
                 # DEV: Flask >= (0, 12, 0) tries to infer mimetype, so set explicitly
                 response = flask.send_file(fp, mimetype="text/plain")
-                self.assertTrue(isinstance(response, flask.Response))
-                self.assertEqual(response.status_code, 200)
-
-        self.assertEqual(len(self.get_spans()), 0)
+                assert isinstance(response, flask.Response)
+                assert response.status_code == 200

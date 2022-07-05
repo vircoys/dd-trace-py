@@ -1,24 +1,24 @@
 import flask
 
+import ddtrace
 from ddtrace import Pin
 from ddtrace.contrib.flask import patch
 from ddtrace.contrib.flask import unpatch
 from ddtrace.vendor import wrapt
-from tests.utils import TracerTestCase
+from tests.utils import BaseTestCase
 
 
-class BaseFlaskTestCase(TracerTestCase):
+class BaseFlaskTestCase(BaseTestCase):
     def setUp(self):
-        super(BaseFlaskTestCase, self).setUp()
 
         patch()
 
         self.app = flask.Flask(__name__, template_folder="test_templates/")
         self.client = self.app.test_client()
+        self.tracer = ddtrace.tracer
         Pin.override(self.app, tracer=self.tracer)
 
     def tearDown(self):
-        super(BaseFlaskTestCase, self).tearDown()
         # Unpatch Flask
         unpatch()
 
