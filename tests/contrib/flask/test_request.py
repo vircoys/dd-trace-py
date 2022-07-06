@@ -7,6 +7,7 @@ from flask import make_response
 
 from ddtrace.contrib.flask.patch import flask_version
 from ddtrace.internal.compat import PY2
+from ddtrace.propagation._utils import get_wsgi_header
 from ddtrace.propagation.http import HTTP_HEADER_PARENT_ID
 from ddtrace.propagation.http import HTTP_HEADER_TRACE_ID
 from tests.utils import snapshot
@@ -181,8 +182,8 @@ class FlaskRequestTestCase(BaseFlaskTestCase):
         res = self.client.get(
             "/",
             headers={
-                HTTP_HEADER_PARENT_ID: "12345",
-                HTTP_HEADER_TRACE_ID: "678910",
+                get_wsgi_header(HTTP_HEADER_PARENT_ID): "0",
+                get_wsgi_header(HTTP_HEADER_TRACE_ID): "678910",
             },
         )
         self.assertEqual(res.status_code, 200)
@@ -193,8 +194,8 @@ class FlaskRequestTestCase(BaseFlaskTestCase):
             res = self.client.get(
                 "/",
                 headers={
-                    HTTP_HEADER_PARENT_ID: "12345",
-                    HTTP_HEADER_TRACE_ID: "678910",
+                    get_wsgi_header(HTTP_HEADER_PARENT_ID): "0",
+                    get_wsgi_header(HTTP_HEADER_TRACE_ID): "678910",
                 },
             )
             self.assertEqual(res.status_code, 200)
@@ -205,8 +206,8 @@ class FlaskRequestTestCase(BaseFlaskTestCase):
             res = self.client.get(
                 "/",
                 headers={
-                    HTTP_HEADER_PARENT_ID: "12345",
-                    HTTP_HEADER_TRACE_ID: "678910",
+                    get_wsgi_header(HTTP_HEADER_PARENT_ID): "0",
+                    get_wsgi_header(HTTP_HEADER_TRACE_ID): "678910",
                 },
             )
             self.assertEqual(res.status_code, 200)
