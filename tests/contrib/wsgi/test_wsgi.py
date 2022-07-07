@@ -6,7 +6,6 @@ from ddtrace import config
 from ddtrace.contrib.wsgi import _utils
 from ddtrace.contrib.wsgi import wsgi
 from ddtrace.internal.compat import PY2
-from ddtrace.internal.compat import PY3
 
 
 if PY2:
@@ -198,7 +197,7 @@ def test_generator_exit_ignored_in_top_level_span(tracer, test_spans):
     assert spans[0].error == 0
 
 
-@snapshot(ignores=["meta.error.stack"], variants={"py2": PY2, "py3": PY3})
+@snapshot(ignores=["meta.error.stack", "meta.error.type"])
 def test_generator_exit_ignored_in_top_level_span_snapshot():
     with pytest.raises(generatorExit):
         app = TestApp(wsgi.DDWSGIMiddleware(application))
@@ -237,7 +236,7 @@ def test_200():
     assert resp.status_int == 200
 
 
-@snapshot(ignores=["meta.error.stack"], variants={"py2": PY2, "py3": PY3})
+@snapshot(ignores=["meta.error.stack", "meta.error.type"])
 def test_500():
     app = TestApp(wsgi.DDWSGIMiddleware(application))
     with pytest.raises(Exception):
@@ -253,7 +252,7 @@ def test_wsgi_base_middleware(use_global_tracer, tracer):
     assert resp.status_int == 200
 
 
-@snapshot(ignores=["meta.error.stack"], variants={"py2": PY2, "py3": PY3})
+@snapshot(ignores=["meta.error.stack", "meta.error.type"])
 @pytest.mark.parametrize("use_global_tracer", [True])
 def test_wsgi_base_middleware_500(use_global_tracer, tracer):
     # Note - span modifiers are not called
