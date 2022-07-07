@@ -9,8 +9,10 @@ from typing import Optional
 import attr
 import six
 
+from ddtrace.internal.constants import SPAN_METRIC_TOP_LEVEL
 from ddtrace.internal.logger import get_logger
 from ddtrace.internal.processor import SpanProcessor
+from ddtrace.internal.sampling import is_single_span_sampled
 from ddtrace.internal.service import ServiceStatusError
 from ddtrace.internal.writer import TraceWriter
 from ddtrace.span import Span
@@ -68,7 +70,11 @@ class TraceSamplingProcessor(TraceProcessor):
             if self._compute_stats_enabled:
                 priority = trace[0]._context.sampling_priority if trace[0]._context is not None else None
                 if priority is not None and priority <= 0:
-                    return None
+                    # When any span is marked as keep by a single span sampling
+                    # decision then we still send all and only those spans.
+                    single_spans = [_ for _ in trace if is_single_span_sampled(_)]
+
+                    return single_spans or None
 
             for span in trace:
                 if span.sampled:
@@ -105,10 +111,15 @@ class TraceTopLevelSpanProcessor(TraceProcessor):
 
         span_ids = {span.span_id for span in trace}
         for span in trace:
+            # Do not add _dd.top_level metric to avoid agent computing stats
+            # on single spans sent as separate payload
+            if is_single_span_sampled(span):
+                continue
+
             if _is_top_level(span):
-                span.set_metric("_dd.top_level", 1)
+                span.set_metric(SPAN_METRIC_TOP_LEVEL, 1)
             elif span.parent_id and span.parent_id not in span_ids:
-                span.set_metric("_dd.top_level", 0)
+                span.set_metric(SPAN_METRIC_TOP_LEVEL, 0)
 
         return trace
 

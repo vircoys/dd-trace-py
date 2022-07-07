@@ -10,3 +10,4 @@ PROPAGATION_STYLE_ALL = frozenset(
 
 
 DEFAULT_SERVICE_NAME = "unnamed_python_service"
+SPAN_METRIC_TOP_LEVEL = "_dd.top_level"

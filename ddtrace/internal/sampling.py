@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     from typing import Text
 
     from ddtrace.context import Context
+    from ddtrace.span import Span
 
 
 class SamplingMechanism(object):
@@ -82,3 +83,10 @@ def update_sampling_decision(
         return _set_trace_tag(context, sampling_mechanism)
     else:
         return _unset_trace_tag(context)
+
+
+def is_single_span_sampled(
+    span,  # type: Span
+):
+    # FIXME: Replace with SamplingMechanism constant
+    return span.get_metric("_dd.span_sampling.mechanism") == 8
