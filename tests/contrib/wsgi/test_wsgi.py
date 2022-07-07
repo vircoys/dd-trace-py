@@ -253,7 +253,7 @@ def test_wsgi_base_middleware(use_global_tracer, tracer):
     assert resp.status_int == 200
 
 
-@snapshot(ignores=["meta.error.stack", "meta.error.type"])
+@snapshot(ignores=["meta.error.stack"], variants={"py2": PY2, "py3": PY3})
 @pytest.mark.parametrize("use_global_tracer", [True])
 def test_wsgi_base_middleware_500(use_global_tracer, tracer):
     # Note - span modifiers are not called
