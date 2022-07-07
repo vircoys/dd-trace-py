@@ -80,6 +80,9 @@ class DDWSGIMiddlewareBase:
             # This can occur if a streaming response exits abruptly leading to a broken pipe.
             # Note: The wsgi.response span will still have the error information included.
             req_span._ignore_exception(generatorExit)
+            # modify request span before calling the wsgi_app. This ensures the request span modifier
+            # is always called even when the wsgi app raises an exception.
+            self.request_span_modifier(req_span, environ)
             with self.tracer.trace(self.application_span) as app_span:
                 intercept_start_response = functools.partial(self.traced_start_response, start_response, req_span)
                 result = self.app(environ, intercept_start_response)
@@ -89,8 +92,6 @@ class DDWSGIMiddlewareBase:
                 self.response_span_modifier(resp_span, result)
                 for chunk in result:
                     yield chunk
-
-            self.request_span_modifier(req_span, environ)
 
             if hasattr(result, "close"):
                 try:

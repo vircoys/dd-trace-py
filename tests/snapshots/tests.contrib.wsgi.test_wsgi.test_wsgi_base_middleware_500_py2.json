@@ -2,7 +2,7 @@
   {
     "name": "test_wsgi.request",
     "service": "wsgi",
-    "resource": "test_wsgi.request",
+    "resource": "request resource was modified",
     "trace_id": 0,
     "span_id": 1,
     "parent_id": 0,
@@ -13,6 +13,7 @@
       "error.msg": "Oops!",
       "error.stack": "Traceback (most recent call last):\n  File \"/Users/munir.abdinur/Documents/ApmPython/dd-trace-py/ddtrace/contrib/wsgi/_utils.py\", line 82, in __call__\n    result = self.app(environ, intercept_start_response)\n  File \"/Users/munir.abdinur/Documents/ApmPython/dd-trace-py/tests/contrib/wsgi/test_wsgi.py\", line 47, in application\n    raise Exception(\"Oops!\")\nException: Oops!\n",
       "error.type": "exceptions.Exception",
+      "request_tag": "req test tag set",
       "runtime-id": "3e8cfd695dcd4c4d85962b429234b6e7"
     },
     "metrics": {
@@ -20,6 +21,7 @@
       "_dd.top_level": 1,
       "_dd.tracer_kr": 1.0,
       "_sampling_priority_v1": 1,
+      "request_metric": 1,
       "system.pid": 89266
     },
     "duration": 514000,
