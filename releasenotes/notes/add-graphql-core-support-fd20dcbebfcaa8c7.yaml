@@ -1,0 +1,4 @@
+---
+features:
+  - |
+    graphql: adds tracing for ``graphql-core>2``
