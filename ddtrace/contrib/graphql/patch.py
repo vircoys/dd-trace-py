@@ -42,6 +42,7 @@ graphql_version = parse_version(_graphql_version_str)
 
 if graphql_version < (3, 0):
     from graphql.language.ast import Document
+    from promise import Promise
 else:
     from graphql.language.ast import DocumentNode as Document
 
@@ -144,6 +145,16 @@ def _traced_execute(func, args, kwargs):
         document = get_argument_value(args, kwargs, 1, "document")
     resource = _get_source_str(document)
 
+    if graphql_version < (3, 0) and get_argument_value(args, kwargs, 7, "return_promise"):
+        span = pin.tracer.trace(
+            name="graphql.execute",
+            resource=resource,
+            service=trace_utils.int_service(pin, config.graphql),
+            span_type=SpanTypes.GRAPHQL,
+        )
+        _init_span(span)
+        return _trace_execute_promise(func, args, kwargs, span)
+
     with pin.tracer.trace(
         name="graphql.execute",
         resource=resource,
@@ -152,10 +163,7 @@ def _traced_execute(func, args, kwargs):
     ) as span:
         _init_span(span)
         result = func(*args, **kwargs)
-        if isinstance(result, ExecutionResult):
-            # set error tags if the result contains a list of GraphqlErrors, skip if it's a promise
-            # TODO: support promises in graphql-core==2
-            _set_span_errors(result.errors, span)
+        _set_span_errors(result.errors, span)
         return result
 
 
@@ -262,3 +270,19 @@ def _set_span_errors(errors, span):
 
     error_msgs = "\n".join([stringify(error) for error in errors])
     span.set_exc_fields(GraphQLError, error_msgs, "")
+
+
+def _trace_execute_promise(execute_func, f_args, f_kwargs, span):
+    def finish_span(promise_result):
+        # type: (ExecutionResult) -> ExecutionResult
+        _set_span_errors(promise_result.errors, span)
+        span.finish()
+        return promise_result
+
+    try:
+        promise = execute_func(*f_args, **f_kwargs)
+    except Exception:
+        span.__exit__(**sys.exc_info())
+        raise
+
+    return promise.then(finish_span, finish_span)
