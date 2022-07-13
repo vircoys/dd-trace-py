@@ -80,7 +80,7 @@ venv = Venv(
         "coverage": latest,
         "pytest-cov": latest,
         "opentracing": latest,
-        "hypothesis": latest,
+        "hypothesis": "<6.45.1",
     },
     env={
         "DD_TESTING_RAISE": "1",
@@ -185,6 +185,11 @@ venv = Venv(
             pkgs={"riot": latest},
         ),
         Venv(
+            pys=["3"],
+            name="scripts",
+            command="python -m doctest {cmdargs} scripts/get-target-milestone.py",
+        ),
+        Venv(
             name="docs",
             pys=["3"],
             pkgs={
@@ -193,6 +198,10 @@ venv = Venv(
                 "sphinx": "~=4.3.2",
                 "sphinxcontrib-spelling": latest,
                 "PyEnchant": latest,
+                # Pin due to dulwich not publishing wheels and the env doesn't have
+                # the dependencies required to build the package.
+                # https://github.com/jelmer/dulwich/issues/963.
+                "dulwich": "<0.20.36",
             },
             command="scripts/build-docs",
         ),
@@ -314,6 +323,18 @@ venv = Venv(
             ],
         ),
         Venv(
+            name="internal",
+            command="pytest {cmdargs} tests/internal/",
+            venvs=[
+                Venv(pys="2.7"),
+                Venv(
+                    pys=select_pys(min_version="3.5"),
+                    pkgs={"pytest-asyncio": latest},
+                ),
+            ],
+            pkgs={"httpretty": "==0.9.7"},
+        ),
+        Venv(
             name="runtime",
             command="pytest {cmdargs} tests/runtime/",
             venvs=[Venv(pys=select_pys(), pkgs={"msgpack": latest})],
@@ -325,6 +346,15 @@ venv = Venv(
             pkgs={
                 "redis": latest,
                 "gevent": latest,
+            },
+        ),
+        Venv(
+            name="debugger",
+            command="pytest {cmdargs} tests/debugging/",
+            pys=select_pys(),
+            pkgs={
+                "msgpack": latest,
+                "httpretty": "==0.9.7",
             },
         ),
         Venv(
@@ -411,18 +441,6 @@ venv = Venv(
                         "kombu": "~=4.3.0",
                     },
                 ),
-                Venv(
-                    pys=select_pys(max_version="3.6"),
-                    pkgs={
-                        "pytest": "~=3.10",
-                        "celery": [
-                            "~=4.0.2",
-                            "~=4.1.1",
-                        ],
-                        "redis": "~=3.5",
-                        "kombu": "~=4.4.0",
-                    },
-                ),
                 # Celery 4.2 is now limited to Kombu 4.3
                 # https://github.com/celery/celery/commit/1571d414461f01ae55be63a03e2adaa94dbcb15d
                 Venv(
@@ -457,9 +475,7 @@ venv = Venv(
                     },
                     pkgs={
                         "celery": [
-                            # Pin until https://github.com/celery/celery/issues/6829 is resolved.
-                            # "~=5.0.5",
-                            "==5.0.5",
+                            "~=5.0.5",
                             "~=5.0",  # most recent 5.x
                             latest,
                         ],
@@ -1209,6 +1225,9 @@ venv = Venv(
             # aiobotocore: aiobotocore>=1.0 not yet supported
             name="aiobotocore",
             command="pytest {cmdargs} tests/contrib/aiobotocore",
+            pkgs={
+                "pytest-asyncio": latest,
+            },
             venvs=[
                 Venv(
                     pys=select_pys(min_version="3.5", max_version="3.6"),
@@ -1255,8 +1274,17 @@ venv = Venv(
             ],
         ),
         Venv(
+            name="aiomysql",
+            pys=select_pys(min_version="3.7"),
+            command="pytest {cmdargs} tests/contrib/aiomysql",
+            pkgs={
+                "pytest-asyncio": latest,
+                "aiomysql": ["~=0.1.0", latest],
+            },
+        ),
+        Venv(
             name="pytest",
-            command="pytest {cmdargs} tests/contrib/pytest",
+            command="pytest {cmdargs} tests/contrib/pytest/",
             venvs=[
                 Venv(
                     pys=["2.7"],
@@ -1287,6 +1315,48 @@ venv = Venv(
                         "msgpack": latest,
                         "more_itertools": "<8.11.0",
                     },
+                ),
+            ],
+        ),
+        Venv(
+            name="pytest-bdd",
+            command="pytest {cmdargs} tests/contrib/pytest_bdd/",
+            pkgs={"msgpack": latest},
+            venvs=[
+                Venv(
+                    pys=["2.7"],
+                    # pytest-bdd==3.4 is last to support python 2.7
+                    pkgs={"pytest-bdd": ">=3.0,<3.5"},
+                ),
+                Venv(
+                    pkgs={
+                        "more_itertools": "<8.11.0",
+                    },
+                    venvs=[
+                        Venv(
+                            pys=["3.6"],
+                            pkgs={"pytest-bdd": [">=4.0,<5.0"]},
+                        ),
+                        Venv(
+                            pys=select_pys(min_version="3.7", max_version="3.9"),
+                            pkgs={
+                                "pytest-bdd": [
+                                    ">=4.0,<5.0",
+                                    ">=6.0,<7.0",
+                                ]
+                            },
+                        ),
+                        Venv(
+                            pys=select_pys(min_version="3.10"),
+                            pkgs={
+                                "pytest-bdd": [
+                                    ">=4.0,<5.0",
+                                    ">=6.0,<7.0",
+                                    latest,
+                                ]
+                            },
+                        ),
+                    ],
                 ),
             ],
         ),
@@ -1333,6 +1403,43 @@ venv = Venv(
                 Venv(
                     pys=select_pys(min_version="3.10"),
                     pkgs={
+                        "grpcio": ["~=1.42.0", latest],
+                    },
+                ),
+            ],
+        ),
+        Venv(
+            name="grpc_aio",
+            command="python -m pytest {cmdargs} tests/contrib/grpc_aio",
+            pkgs={
+                "googleapis-common-protos": latest,
+                "pytest-asyncio": latest,
+            },
+            venvs=[
+                Venv(
+                    pys=select_pys(min_version="3.6", max_version="3.6"),
+                    pkgs={
+                        "grpcio": ["~=1.32.0", latest],
+                    },
+                ),
+                Venv(
+                    pys=select_pys(min_version="3.7", max_version="3.8"),
+                    pkgs={
+                        "grpcio": ["~=1.32.0", latest],
+                    },
+                ),
+                Venv(
+                    pys=select_pys(min_version="3.9", max_version="3.9"),
+                    pkgs={
+                        # 3.9 wheels are not provided in 1.32
+                        "grpcio": ["~=1.33.0", latest],
+                    },
+                ),
+                Venv(
+                    pys=select_pys(min_version="3.10"),
+                    pkgs={
+                        # 3.10 wheels were started to be provided in 1.41
+                        # but the version contains some bugs resolved by https://github.com/grpc/grpc/pull/27635.
                         "grpcio": ["~=1.42.0", latest],
                     },
                 ),
@@ -1410,20 +1517,20 @@ venv = Venv(
         Venv(
             name="cassandra",
             venvs=[
-                # Python 3.9 requires a more recent release.
+                # cassandra-driver does not officially support 3.10
+                # TODO: fix sporadically failing tests in cassandra-driver v3.25.0 and py3.10
                 Venv(
-                    pys=select_pys(min_version="3.9"),
+                    pys=["3.9"],
                     pkgs={"cassandra-driver": latest},
                 ),
                 # releases 3.7 and 3.8 are broken on Python >= 3.7
                 # (see https://github.com/r4fek/django-cassandra-engine/issues/104)
-                Venv(
-                    pys=["3.7", "3.8"],
-                    pkgs={"cassandra-driver": ["~=3.6.0", "~=3.15.0", latest]},
-                ),
+                Venv(pys=["3.7", "3.8"], pkgs={"cassandra-driver": ["~=3.6.0", "~=3.15.0", "~=3.24.0", latest]}),
                 Venv(
                     pys=select_pys(max_version="3.6"),
-                    pkgs={"cassandra-driver": [("~=3.%d.0" % m) for m in range(6, 9)] + ["~=3.15.0", latest]},
+                    pkgs={
+                        "cassandra-driver": [("~=3.%d.0" % m) for m in range(6, 9)] + ["~=3.15.0", "~=3.24.0", latest]
+                    },
                 ),
             ],
             command="pytest {cmdargs} tests/contrib/cassandra",
@@ -1587,20 +1694,34 @@ venv = Venv(
         ),
         Venv(
             name="redis",
-            pys=select_pys(),
-            command="pytest {cmdargs} tests/contrib/redis",
-            pkgs={
-                "redis": [
-                    ">=2.10,<2.11",
-                    ">=3.0,<3.1",
-                    ">=3.1,<3.2",
-                    ">=3.2,<3.3",
-                    ">=3.3,<3.4",
-                    ">=3.4,<3.5",
-                    ">=3.5,<3.6",
-                    latest,
-                ]
-            },
+            venvs=[
+                Venv(
+                    pys=select_pys(),
+                    command="pytest {cmdargs} --ignore-glob='*asyncio*' tests/contrib/redis",
+                    pkgs={
+                        "redis": [
+                            ">=2.10,<2.11",
+                            ">=3.0,<3.1",
+                            ">=3.1,<3.2",
+                            ">=3.2,<3.3",
+                            ">=3.3,<3.4",
+                            ">=3.4,<3.5",
+                            ">=3.5,<3.6",
+                        ],
+                    },
+                ),
+                Venv(
+                    pys=select_pys(min_version="3.6"),
+                    command="pytest {cmdargs} tests/contrib/redis",
+                    pkgs={
+                        "pytest-asyncio": latest,
+                        "redis": [
+                            ">=4.2,<4.3",
+                            latest,
+                        ],
+                    },
+                ),
+            ],
         ),
         Venv(
             name="aredis",

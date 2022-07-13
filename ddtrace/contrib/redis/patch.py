@@ -1,13 +1,14 @@
 import redis
+from six import PY3
 
 from ddtrace import config
 from ddtrace.vendor import wrapt
 
+from ...internal.utils.formats import stringify_cache_args
 from ...pin import Pin
 from ..trace_utils import unwrap
 from .util import _trace_redis_cmd
 from .util import _trace_redis_execute_pipeline
-from .util import format_command_args
 
 
 config._add("redis", dict(_default_service="redis"))
@@ -36,6 +37,16 @@ def patch():
         _w("redis", "Redis.pipeline", traced_pipeline)
         _w("redis.client", "Pipeline.execute", traced_execute_pipeline)
         _w("redis.client", "Pipeline.immediate_execute_command", traced_execute_command)
+        # Avoid mypy invalid syntax errors when parsing Python 2 files
+        if PY3 and redis.VERSION >= (4, 2, 0):
+            from .asyncio_patch import traced_async_execute_command
+            from .asyncio_patch import traced_async_execute_pipeline
+
+            _w("redis.asyncio.client", "Redis.execute_command", traced_async_execute_command)
+            _w("redis.asyncio.client", "Redis.pipeline", traced_pipeline)
+            _w("redis.asyncio.client", "Pipeline.execute", traced_async_execute_pipeline)
+            _w("redis.asyncio.client", "Pipeline.immediate_execute_command", traced_async_execute_command)
+            Pin(service=None).onto(redis.asyncio.Redis)
     Pin(service=None).onto(redis.StrictRedis)
 
 
@@ -54,6 +65,11 @@ def unpatch():
             unwrap(redis.Redis, "pipeline")
             unwrap(redis.client.Pipeline, "execute")
             unwrap(redis.client.Pipeline, "immediate_execute_command")
+            if redis.VERSION >= (4, 2, 0):
+                unwrap(redis.asyncio.client.Redis, "execute_command")
+                unwrap(redis.asyncio.client.Redis, "pipeline")
+                unwrap(redis.asyncio.client.Pipeline, "execute")
+                unwrap(redis.asyncio.client.Pipeline, "immediate_execute_command")
 
 
 #
@@ -81,7 +97,7 @@ def traced_execute_pipeline(func, instance, args, kwargs):
     if not pin or not pin.enabled():
         return func(*args, **kwargs)
 
-    cmds = [format_command_args(c) for c, _ in instance.command_stack]
+    cmds = [stringify_cache_args(c) for c, _ in instance.command_stack]
     resource = "\n".join(cmds)
     with _trace_redis_execute_pipeline(pin, config.redis, resource, instance):
         return func(*args, **kwargs)

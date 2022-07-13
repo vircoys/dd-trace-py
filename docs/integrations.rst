@@ -42,12 +42,17 @@ asgi
 ^^^^
 .. automodule:: ddtrace.contrib.asgi
 
-
 .. _aiohttp:
 
 aiohttp
 ^^^^^^^
 .. automodule:: ddtrace.contrib.aiohttp
+
+.. _aiomysql:
+
+aiomysql
+^^^^^^^^
+.. automodule:: ddtrace.contrib.aiomysql
 
 
 .. _aiohttp_jinja2:
@@ -323,6 +328,12 @@ pytest
 ^^^^^^
 .. automodule:: ddtrace.contrib.pytest
 
+
+.. _pytest_bdd:
+
+pytest-bdd
+^^^^^^^^^^
+.. automodule:: ddtrace.contrib.pytest_bdd
 
 .. _psycopg2:
 

@@ -1,9 +1,11 @@
+import os
+
 import httpretty
 import mock
-import pkg_resources
 import pytest
 
 from ddtrace.internal.telemetry.data import get_application
+from ddtrace.internal.telemetry.data import get_dependencies
 from ddtrace.internal.telemetry.data import get_host_info
 from ddtrace.internal.telemetry.writer import TelemetryWriter
 from ddtrace.internal.telemetry.writer import get_runtime_id
@@ -36,6 +38,8 @@ def mock_time():
 @pytest.fixture
 def telemetry_writer():
     telemetry_writer = TelemetryWriter(AGENT_URL)
+    # Enable the TelemetryWriter without queuing an app-started event
+    # and setting up exit hooks
     telemetry_writer._enabled = True
     yield telemetry_writer
 
@@ -79,7 +83,7 @@ def test_add_event_disabled_writer(mock_send_request, telemetry_writer_disabled)
     assert len(httpretty.latest_requests()) == 0
 
 
-def test_add_app_started_event(mock_time, mock_send_request, telemetry_writer):
+def test_app_started_event(mock_time, mock_send_request, telemetry_writer):
     """asserts that app_started_event() queues a valid telemetry request which is then sent by periodic()"""
     # queue integrations
     telemetry_writer.add_integration("integration-t", True)
@@ -96,7 +100,7 @@ def test_add_app_started_event(mock_time, mock_send_request, telemetry_writer):
     assert headers["DD-Telemetry-Request-Type"] == "app-started"
     # validate request body
     payload = {
-        "dependencies": [{"name": pkg.project_name, "version": pkg.version} for pkg in pkg_resources.working_set],
+        "dependencies": get_dependencies(),
         "integrations": [
             {
                 "name": "integration-t",
@@ -120,10 +124,23 @@ def test_add_app_started_event(mock_time, mock_send_request, telemetry_writer):
     assert httpretty.last_request().parsed_body == _get_request_body(payload, "app-started")
 
 
-def test_add_app_closing_event(mock_time, mock_send_request, telemetry_writer):
-    """asserts that shutdown() queues and sends an app-closing telemetry request"""
+def test_app_started_event_on_fork(telemetry_writer):
+    """asserts that app_started_event() is not sent after a fork"""
+    if os.fork() == 0:
+        # queue an app started event
+        telemetry_writer.app_started_event()
+        # send all queued events to the agent
+        telemetry_writer.periodic()
+        # ensure an app_started event was not sent
+        assert len(httpretty.latest_requests()) == 0
+        # Kill the process so it doesn't continue running the rest of the test suite
+        os._exit(0)
+
+
+def test_app_closing_event(mock_time, mock_send_request, telemetry_writer):
+    """asserts that on_shutdown() queues and sends an app-closing telemetry request"""
     # send app closed event
-    telemetry_writer.shutdown()
+    telemetry_writer.on_shutdown()
     # assert that one request was sent
     assert len(httpretty.latest_requests()) == 1
     # ensure an app closing event was sent
@@ -133,6 +150,17 @@ def test_add_app_closing_event(mock_time, mock_send_request, telemetry_writer):
     # ensure a valid request body was sent
     assert len(httpretty.latest_requests()) == 1
     assert httpretty.last_request().parsed_body == _get_request_body({}, "app-closing")
+
+
+def test_app_closing_on_fork(telemetry_writer):
+    """asserts that on_shutdown() does not send an app-closing telemetry request after a fork"""
+    if os.fork() == 0:
+        # send app closed event
+        telemetry_writer.on_shutdown()
+        # assert that no requests were sent
+        assert len(httpretty.latest_requests()) == 0
+        # Kill the process so it doesn't continue running the rest of the test suite
+        os._exit(0)
 
 
 def test_add_integration(mock_time, mock_send_request, telemetry_writer):
@@ -185,23 +213,15 @@ def test_periodic(mock_send_request, telemetry_writer):
     # queue two integrations
     telemetry_writer.add_integration("integration-1", True)
     telemetry_writer.add_integration("integration-2", False)
-
-    with mock.patch("ddtrace.internal.telemetry.writer.log") as log:
-        # send all events to the agent proxy
-        telemetry_writer.periodic()
-        # assert no warning logs were generated while sending telemetry requests
-        log.warning.assert_not_called()
+    telemetry_writer.periodic()
     # ensure one app-started and one app-integrations-change event was sent
     assert len(httpretty.latest_requests()) == 2
 
     # queue 2 more integrations
     telemetry_writer.add_integration("integration-3", True)
     telemetry_writer.add_integration("integration-4", False)
-    with mock.patch("ddtrace.internal.telemetry.writer.log") as log:
-        # send both integrations to the agent proxy
-        telemetry_writer.periodic()
-        # assert no warning logs were generated while sending telemetry requests
-        log.warning.assert_not_called()
+    # send both integrations to the agent proxy
+    telemetry_writer.periodic()
     # ensure one more app-integrations-change events was sent
     # 2 requests were sent in the previous flush
     assert len(httpretty.latest_requests()) == 3
@@ -212,9 +232,9 @@ def test_send_failing_request(mock_status, mock_send_request, telemetry_writer):
     """asserts that a warning is logged when an unsuccessful response is returned by the http client"""
     with mock.patch("ddtrace.internal.telemetry.writer.log") as log:
         # sends failing app-closing event
-        telemetry_writer.shutdown()
+        telemetry_writer.on_shutdown()
         # asserts unsuccessful status code was logged
-        log.warning.assert_called_with(
+        log.debug.assert_called_with(
             "failed to send telemetry to the Datadog Agent at %s/%s. response: %s",
             telemetry_writer._agent_url,
             telemetry_writer.ENDPOINT,
@@ -224,7 +244,7 @@ def test_send_failing_request(mock_status, mock_send_request, telemetry_writer):
     assert len(httpretty.latest_requests()) == 1
 
 
-def test_send_request_exception(telemetry_writer):
+def test_send_request_exception():
     """asserts that an error is logged when an exception is raised by the http client"""
     # create a telemetry writer with an invalid agent url.
     # this will raise an Exception on _send_request
@@ -233,14 +253,21 @@ def test_send_request_exception(telemetry_writer):
 
     with mock.patch("ddtrace.internal.telemetry.writer.log") as log:
         # sends failing app-closing event
-        telemetry_writer.shutdown()
+        telemetry_writer.on_shutdown()
         # assert an exception was logged
-        log.warning.assert_called_with(
+        log.debug.assert_called_with(
             "failed to send telemetry to the Datadog Agent at %s/%s.",
             "http://hostthatdoesntexist:1234",
             telemetry_writer.ENDPOINT,
             exc_info=True,
         )
+
+
+def test_telemetry_graceful_shutdown(mock_time, mock_send_request, telemetry_writer):
+    telemetry_writer.start()
+    telemetry_writer.stop()
+    assert len(httpretty.latest_requests()) == 2
+    assert httpretty.last_request().parsed_body == _get_request_body({}, "app-closing", 2)
 
 
 def _get_request_body(payload, payload_type, seq_id=1):

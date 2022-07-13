@@ -2,6 +2,8 @@ import ast
 import contextlib
 from itertools import product
 import os
+from os.path import split
+from os.path import splitext
 import sys
 from tempfile import NamedTemporaryFile
 import time
@@ -78,7 +80,12 @@ def snapshot(request):
     assert len(marks) < 2, "Multiple snapshot marks detected"
     if marks:
         snap = marks[0]
-        token = _request_token(request).replace(" ", "_").replace(os.path.sep, "_")
+        token = snap.kwargs.get("token")
+        if token:
+            del snap.kwargs["token"]
+        else:
+            token = _request_token(request).replace(" ", "_").replace(os.path.sep, "_")
+
         with _snapshot_context(token, *snap.args, **snap.kwargs) as snapshot:
             yield snapshot
     else:
@@ -114,8 +121,6 @@ if PY2:
     import marshal
     from py_compile import MAGIC
     from py_compile import wr_long
-
-    from _pytest._code.code import ExceptionInfo
 
     def dump_code_to_file(code, file):
         file.write(MAGIC)
@@ -169,15 +174,19 @@ class FunctionDefFinder(ast.NodeVisitor):
 def run_function_from_file(item, params=None):
     file, _, func = item.location
     marker = item.get_closest_marker("subprocess")
+    run_module = marker.kwargs.get("run_module", False)
 
-    file_index = 1
-    args = marker.kwargs.get("args", [])
-    args.insert(0, None)
-    args.insert(0, sys.executable)
+    args = [sys.executable]
+
+    # Add ddtrace-run prefix in ddtrace-run mode
     if marker.kwargs.get("ddtrace_run", False):
-        file_index += 1
         args.insert(0, "ddtrace-run")
 
+    # Add -m if running script as a module
+    if run_module:
+        args.append("-m")
+
+    # Override environment variables for the subprocess
     env = os.environ.copy()
     env.update(marker.kwargs.get("env", {}))
     if params is not None:
@@ -196,33 +205,32 @@ def run_function_from_file(item, params=None):
     with NamedTemporaryFile(mode="wb", suffix=".pyc") as fp:
         dump_code_to_file(compile(FunctionDefFinder(func).find(file), file, "exec"), fp.file)
 
-        start = time.time()
-        args[file_index] = fp.name
-        out, err, status, _ = call_program(*args, env=env)
-        end = time.time()
-        excinfo = None
+        # If running a module with -m, we change directory to the module's
+        # folder and run the module directly.
+        if run_module:
+            cwd, module = split(splitext(fp.name)[0])
+            args.append(module)
+        else:
+            cwd = None
+            args.append(fp.name)
 
-        if status != expected_status:
-            excinfo = AssertionError(
-                "Expected status %s, got %s.\n=== Captured STDERR ===\n%s=== End of captured STDERR ==="
-                % (expected_status, status, err.decode("utf-8"))
-            )
-        elif expected_out is not None and out != expected_out:
-            excinfo = AssertionError("STDOUT: Expected [%s] got [%s]" % (expected_out, out))
-        elif expected_err is not None and err != expected_err:
-            excinfo = AssertionError("STDERR: Expected [%s] got [%s]" % (expected_err, err))
+        # Add any extra requested args
+        args.extend(marker.kwargs.get("args", []))
 
-        if PY2 and excinfo is not None:
-            try:
-                raise excinfo
-            except Exception:
-                excinfo = ExceptionInfo(sys.exc_info())
+        def _subprocess_wrapper():
+            out, err, status, _ = call_program(*args, env=env, cwd=cwd)
 
-        call_info_args = dict(result=None, excinfo=excinfo, start=start, stop=end, when="call")
-        if not PY2:
-            call_info_args["duration"] = end - start
+            if status != expected_status:
+                raise AssertionError(
+                    "Expected status %s, got %s.\n=== Captured STDERR ===\n%s=== End of captured STDERR ==="
+                    % (expected_status, status, err.decode("utf-8"))
+                )
+            elif expected_out is not None and out != expected_out:
+                raise AssertionError("STDOUT: Expected [%s] got [%s]" % (expected_out, out))
+            elif expected_err is not None and err != expected_err:
+                raise AssertionError("STDERR: Expected [%s] got [%s]" % (expected_err, err))
 
-        return TestReport.from_item_and_call(item, CallInfo(**call_info_args))
+        return TestReport.from_item_and_call(item, CallInfo.from_call(_subprocess_wrapper, "call"))
 
 
 @pytest.hookimpl(tryfirst=True)

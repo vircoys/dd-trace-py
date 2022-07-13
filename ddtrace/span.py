@@ -38,6 +38,8 @@ from .internal.compat import numeric_types
 from .internal.compat import stringify
 from .internal.compat import time_ns
 from .internal.logger import get_logger
+from .internal.sampling import SamplingMechanism
+from .internal.sampling import update_sampling_decision
 
 
 _NUMERIC_TAGS = (ANALYTICS_SAMPLE_RATE_KEY,)
@@ -61,6 +63,7 @@ class Span(object):
         "_meta",
         "error",
         "_metrics",
+        "_store",
         "span_type",
         "start_ns",
         "duration_ns",
@@ -146,6 +149,7 @@ class Span(object):
         self._parent = None  # type: Optional[Span]
         self._ignored_exceptions = None  # type: Optional[List[Exception]]
         self._local_root = None  # type: Optional[Span]
+        self._store = None  # type: Optional[Dict[str, Any]]
 
     def _ignore_exception(self, exc):
         # type: (Exception) -> None
@@ -153,6 +157,18 @@ class Span(object):
             self._ignored_exceptions = [exc]
         else:
             self._ignored_exceptions.append(exc)
+
+    def _set_ctx_item(self, key, val):
+        # type: (str, Any) -> None
+        if not self._store:
+            self._store = {}
+        self._store[key] = val
+
+    def _get_ctx_item(self, key):
+        # type: (str) -> Optional[Any]
+        if not self._store:
+            return None
+        return self._store.get(key)
 
     @property
     def start(self):
@@ -283,9 +299,11 @@ class Span(object):
 
         elif key == MANUAL_KEEP_KEY:
             self.context.sampling_priority = USER_KEEP
+            update_sampling_decision(self.context, SamplingMechanism.MANUAL, True)
             return
         elif key == MANUAL_DROP_KEY:
             self.context.sampling_priority = USER_REJECT
+            update_sampling_decision(self.context, SamplingMechanism.MANUAL, False)
             return
         elif key == SERVICE_KEY:
             self.service = value

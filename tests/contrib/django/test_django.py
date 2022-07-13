@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import itertools
 import os
 import subprocess
@@ -732,6 +733,30 @@ def test_cache_get(test_spans):
     assert_dict_issuperset(span.get_tags(), expected_meta)
 
 
+def test_cache_get_unicode(test_spans):
+    # get the default cache
+    cache = django.core.cache.caches["default"]
+
+    cache.get(u"😐")
+
+    spans = test_spans.get_spans()
+    assert len(spans) == 1
+
+    span = spans[0]
+    assert span.service == "django"
+    assert span.resource == "django.core.cache.backends.locmem.get"
+    assert span.name == "django.cache"
+    assert span.span_type == "cache"
+    assert span.error == 0
+
+    expected_meta = {
+        "django.cache.backend": "django.core.cache.backends.locmem.LocMemCache",
+        "django.cache.key": u"😐",
+    }
+
+    assert_dict_issuperset(span.get_tags(), expected_meta)
+
+
 def test_cache_set(test_spans):
     # get the default cache
     cache = django.core.cache.caches["default"]
@@ -957,7 +982,7 @@ def test_cache_get_many(test_spans):
 
     expected_meta = {
         "django.cache.backend": "django.core.cache.backends.locmem.LocMemCache",
-        "django.cache.key": str(["missing_key", "another_key"]),
+        "django.cache.key": "missing_key another_key",
     }
 
     assert_dict_issuperset(span_get_many.get_tags(), expected_meta)
@@ -1071,8 +1096,7 @@ def test_cached_view(client, test_spans):
     expected_meta_view = {
         "django.cache.backend": "django.core.cache.backends.locmem.LocMemCache",
         "django.cache.key": (
-            "views.decorators.cache.cache_page.."
-            "GET.03cdc1cc4aab71b038a6764e5fcabb82.d41d8cd98f00b204e9800998ecf8427e.en-us"
+            "views.decorators.cache.cache_page..GET.03cdc1cc4aab71b038a6764e5fcabb82.d41d8cd98f00b204e9800998ecf8..."
         ),
     }
 
@@ -1357,6 +1381,28 @@ def test_template(test_spans):
     assert span.get_tag("django.template.name") == "my-template"
 
 
+def test_template_no_instrumented(test_spans):
+    """
+    When rendering templates with instrument_templates option disabled
+
+    This test assert that changing the value at runtime/after patching
+    properly disables template spans.
+    """
+    # prepare a base template using the default engine
+    with override_config("django", dict(instrument_templates=False)):
+        template = django.template.Template("Hello {{name}}!")
+        ctx = django.template.Context({"name": "Django"})
+
+        assert template.render(ctx) == "Hello Django!"
+        spans = test_spans.get_spans()
+        assert len(spans) == 0
+
+        template.name = "my-template"
+        assert template.render(ctx) == "Hello Django!"
+        spans = test_spans.get_spans()
+        assert len(spans) == 0
+
+
 @pytest.mark.skipif(PY2, reason="pathlib is not part of the Python 2 stdlib")
 def test_template_name(test_spans):
     from pathlib import PosixPath
@@ -1538,6 +1584,7 @@ def test_django_use_handler_resource_format_env(client, test_spans):
         ("DD_DJANGO_INSTRUMENT_DATABASES", "instrument_databases"),
         ("DD_DJANGO_INSTRUMENT_CACHES", "instrument_caches"),
         ("DD_DJANGO_INSTRUMENT_MIDDLEWARE", "instrument_middleware"),
+        ("DD_DJANGO_INSTRUMENT_TEMPLATES", "instrument_templates"),
     ],
 )
 def test_enable_django_instrument_env(env_var, instrument_x, ddtrace_run_python_code_in_subprocess):
@@ -1561,6 +1608,7 @@ def test_enable_django_instrument_env(env_var, instrument_x, ddtrace_run_python_
         ("DD_DJANGO_INSTRUMENT_DATABASES", "instrument_databases"),
         ("DD_DJANGO_INSTRUMENT_CACHES", "instrument_caches"),
         ("DD_DJANGO_INSTRUMENT_MIDDLEWARE", "instrument_middleware"),
+        ("DD_DJANGO_INSTRUMENT_TEMPLATES", "instrument_templates"),
     ],
 )
 def test_disable_django_instrument_env(env_var, instrument_x, ddtrace_run_python_code_in_subprocess):
